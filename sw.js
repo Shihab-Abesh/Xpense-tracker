@@ -8,7 +8,7 @@
  *
  * Bump CACHE when you change index.html so phones pick the new version up.
  */
-const CACHE = 'xpense-v3';
+const CACHE = 'xpense-v4';
 
 const SHELL = [
   './',
