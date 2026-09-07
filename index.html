@@ -5,13 +5,6 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#080014">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Xpense">
-  <title>Xpense</title>
-  <link rel="manifest" href="manifest.webmanifest">
-  <link rel="apple-touch-icon" href="icon-192.png">
   <style>
     :root{
       --bg:#080014;
@@ -1338,74 +1331,6 @@
     .hist-nums .in b{ color:var(--income); }
     .hist-nums .out b{ color:var(--spent); }
 
-    /* ───────────── CONNECT SCREEN ───────────── */
-
-    .connect{
-      position:fixed;
-      inset:0;
-      z-index:200;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:20px;
-      overflow-y:auto;
-      background:linear-gradient(160deg,#080014 0%,#13012b 30%,#0a0a2e 65%,#060010 100%);
-    }
-
-    .connect[hidden]{ display:none; }
-
-    .connect-box{
-      width:100%;
-      max-width:390px;
-      padding:24px 20px 22px;
-      border-radius:24px;
-      background:rgba(255,255,255,0.05);
-      border:1px solid rgba(255,255,255,0.11);
-      backdrop-filter:blur(26px);
-      -webkit-backdrop-filter:blur(26px);
-      box-shadow:0 20px 60px rgba(0,0,0,.55);
-    }
-
-    .connect-lede{
-      margin:12px 0 20px;
-      text-align:center;
-      font-size:13.5px;
-      line-height:1.5;
-      color:rgba(255,255,255,0.42);
-    }
-
-    .connect-box .field-label{
-      margin:14px 0 9px;
-    }
-
-    .connect-box .details{
-      margin-bottom:0;
-    }
-
-    .connect-note{
-      margin:14px 0 16px;
-      font-size:11.5px;
-      line-height:1.5;
-      color:rgba(255,255,255,0.30);
-    }
-
-    .connect-note.bad{ color:#FCA5A5; }
-
-    .gear{
-      position:absolute;
-      top:0;
-      right:0;
-      width:32px;
-      height:32px;
-      border-radius:10px;
-      background:rgba(255,255,255,0.05);
-      color:rgba(255,255,255,0.35);
-      font-size:14px;
-      line-height:1;
-    }
-
-    .gear:active{ transform:scale(.92); }
-
     /* ───────────── SNACK / QUEUE ───────────── */
 
     .snack{
@@ -1584,13 +1509,12 @@
 
     <div class="wrap">
 
-      <div class="brand" style="position:relative;">
+      <div class="brand">
         <div class="brand-row">
           <span class="brand-icon">💸</span>
           <h1>Xpense</h1>
         </div>
         <p>every taka counts ✦</p>
-        <button class="gear" id="gear" type="button" title="Connection settings" hidden>⚙</button>
       </div>
 
       <div class="total-card" id="totalCard">
@@ -1788,35 +1712,6 @@
       </div>
     </div>
 
-    <!-- ───── Connect screen (only when hosted outside Apps Script) ───── -->
-    <div class="connect" id="connect" hidden>
-      <div class="connect-box">
-        <div class="brand-row" style="justify-content:center;">
-          <span class="brand-icon">💸</span>
-          <h1 style="margin:0;font-size:26px;font-weight:900;letter-spacing:-.04em;
-                     background-image:linear-gradient(135deg,#C77DFF,#FF6B9D,#FFD93D);
-                     -webkit-background-clip:text;background-clip:text;
-                     -webkit-text-fill-color:transparent;">Xpense</h1>
-        </div>
-        <p class="connect-lede">Connect this phone to your sheet. You only do this once.</p>
-
-        <p class="field-label">Web app URL</p>
-        <input class="details" type="url" id="cfgUrl" inputmode="url" autocomplete="off"
-               placeholder="https://script.google.com/macros/s/…/exec">
-
-        <p class="field-label">Passcode</p>
-        <input class="details" type="password" id="cfgPin" autocomplete="off"
-               placeholder="the API_TOKEN you set in Code.gs">
-
-        <p class="connect-note" id="cfgNote">
-          Both are stored on this phone only. Nothing is saved in your repo,
-          so the page can be public without exposing your data.
-        </p>
-
-        <button class="sheet-save" id="cfgSave" type="button" style="margin-top:4px;">Connect</button>
-      </div>
-    </div>
-
     <div class="snack" id="snack">
       <span id="snackText"></span>
       <span id="snackAction"></span>
@@ -1865,62 +1760,12 @@
 
       var $ = function (id) { return document.getElementById(id); };
 
-      /* ───────── how the app talks to the sheet ─────────
-       *
-       * Two ways, decided automatically:
-       *
-       *   Served BY Apps Script  → google.script.run, no setup, no passcode.
-       *   Hosted anywhere else   → fetch() to the web app URL you paste in.
-       *
-       * The hosted route sends text/plain on purpose. That keeps it a
-       * "simple" cross-origin request, which Apps Script answers directly.
-       * application/json would trigger a preflight it cannot reply to.
-       */
-      var GAS = (typeof google !== 'undefined' && google.script && google.script.run);
-
-      var UKEY = 'xpense_api_url';
-      var PKEY = 'xpense_api_pin';
-
-      function cfg() {
-        return { url: store(UKEY) || '', pin: store(PKEY) || '' };
-      }
-
       function api(fn, arg) {
-        if (GAS) {
-          return new Promise(function (resolve, reject) {
-            google.script.run
-              .withSuccessHandler(resolve)
-              .withFailureHandler(reject)[fn](arg);
-          });
-        }
-
-        var c = cfg();
-        if (!c.url) return Promise.reject(new Error('not-configured'));
-
-        // Match what the plain Apps Script call would have received.
-        var payload = arg;
-        if (fn === 'deleteEntry') payload = { id: arg };
-        if (fn === 'getMonthlyHistory') payload = { limit: arg };
-
-        return fetch(c.url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({ action: fn, token: c.pin, payload: payload || {} })
-        })
-          .then(function (r) { return r.json(); })
-          .then(function (j) {
-            if (!j || !j.ok) throw new Error((j && j.error) || 'Request failed');
-            return j.data;
-          });
-      }
-
-      /** Same rule as the server: June reads as "Jun – Jul 2026". */
-      function periodLabel(monthNo, year) {
-        var a = MONTH_NAMES[monthNo - 1].slice(0, 3);
-        if (monthNo === 12) {
-          return a + ' ' + year + ' – ' + MONTH_NAMES[0].slice(0, 3) + ' ' + (year + 1);
-        }
-        return a + ' – ' + MONTH_NAMES[monthNo].slice(0, 3) + ' ' + year;
+        return new Promise(function (resolve, reject) {
+          google.script.run
+            .withSuccessHandler(resolve)
+            .withFailureHandler(reject)[fn](arg);
+        });
       }
 
       function store(k, v) {
@@ -2246,8 +2091,7 @@
         $('tToday').textContent = num(sum.today);
         $('tMonth').textContent = num(sum.month);
 
-        $('tMonthLabel').textContent =
-          sum.monthPeriod || periodLabel(sum.monthNo, sum.yearNo) || sum.monthLabel || 'This month';
+        if (sum.monthLabel) $('tMonthLabel').textContent = sum.monthLabel;
 
         var list = $('recentList');
         list.innerHTML = '';
@@ -2323,8 +2167,8 @@
         var spent  = Number(sum.month || 0);
         var left   = income - spent;
 
-        var period = sum.monthPeriod || periodLabel(sum.monthNo, sum.yearNo) || '';
-        $('balTitle').textContent = 'BALANCE · ' + period.toUpperCase();
+        var monthWord = (sum.monthLabel || 'This month').split(' ')[0].toUpperCase();
+        $('balTitle').textContent = 'BALANCE · ' + monthWord;
 
         $('balIncome').textContent = money(income);
         $('balSpent').textContent  = money(spent);
@@ -2437,7 +2281,7 @@
       }
 
       function loadSalaryMonth() {
-        $('salMonthLabel').textContent = periodLabel(S.salMonthNo, S.salYear);
+        $('salMonthLabel').textContent = MONTH_NAMES[S.salMonthNo - 1] + ' ' + S.salYear;
 
         var now = new Date();
         var current = monthIndex(now.getFullYear(), now.getMonth() + 1);
@@ -2488,7 +2332,7 @@
       function saveSalary(amountOverride) {
         var amount = (amountOverride !== undefined) ? amountOverride : readSalaryInput();
         var label = (S.salSource === 'Salary' ? 'Salary' : 'Extra income') +
-                    ' for ' + periodLabel(S.salMonthNo, S.salYear);
+                    ' for ' + MONTH_NAMES[S.salMonthNo - 1];
 
         $('salSave').disabled = true;
         $('salSave').textContent = 'Saving…';
@@ -2570,7 +2414,7 @@
 
           var month = document.createElement('p');
           month.className = 'hist-month';
-          month.textContent = r.period || periodLabel(r.monthNo, r.year);
+          month.textContent = r.label;
           if (isCurrent) {
             var badge = document.createElement('span');
             badge.className = 'hist-badge';
@@ -2682,90 +2526,6 @@
 
       /* ───────── boot ───────── */
 
-      /* ───────── connect screen (hosted mode only) ───────── */
-
-      function showConnect(message) {
-        var c = cfg();
-        $('cfgUrl').value = c.url;
-        $('cfgPin').value = c.pin;
-        $('cfgNote').className = 'connect-note' + (message ? ' bad' : '');
-        $('cfgNote').textContent = message ||
-          'Both are stored on this phone only. Nothing is saved in your repo, ' +
-          'so the page can be public without exposing your data.';
-        $('connect').hidden = false;
-      }
-
-      function tryConnect() {
-        var url = $('cfgUrl').value.trim();
-        var pin = $('cfgPin').value;
-
-        if (!/^https:\/\/script\.google(usercontent)?\.com\//.test(url)) {
-          showConnect('That does not look like an Apps Script web app URL. It should start with https://script.google.com/macros/s/ and end with /exec');
-          return;
-        }
-
-        $('cfgSave').disabled = true;
-        $('cfgSave').textContent = 'Connecting…';
-
-        store(UKEY, url);
-        store(PKEY, pin);
-
-        api('getBootstrap')
-          .then(function (b) {
-            $('cfgSave').disabled = false;
-            $('cfgSave').textContent = 'Connect';
-            $('connect').hidden = true;
-            applyBootstrap(b);
-          })
-          .catch(function (err) {
-            $('cfgSave').disabled = false;
-            $('cfgSave').textContent = 'Connect';
-            var m = String(err && err.message || err);
-            showConnect(
-              m.indexOf('passcode') > -1
-                ? 'Wrong passcode. It has to match API_TOKEN in Code.gs exactly.'
-                : 'Could not reach the sheet. Check the URL, and make sure the deployment is set to "Anyone".'
-            );
-          });
-      }
-
-      function applyBootstrap(b) {
-        S.categories = b.categories || [];
-        S.today = b.today;
-        S.history = b.history || [];
-
-        var last = store(CKEY);
-
-        if (last && S.categories.indexOf(last) > -1) {
-          S.category = last;
-        } else if (S.categories.length) {
-          S.category = S.categories[0];
-        }
-
-        renderCats();
-        wireDates();
-        applySummary(b.summary);
-        renderAmount();
-        flushQueue();
-      }
-
-      function offlineFallback() {
-        S.today = ymd(new Date());
-        S.categories = [
-          'Food','Transport','Groceries','Bills','Mobile/Internet',
-          'Health','Shopping','Fashion','Car','Other'
-        ];
-
-        var last = store(CKEY);
-        S.category = (last && S.categories.indexOf(last) > -1) ? last : S.categories[0];
-
-        renderCats();
-        wireDates();
-        renderAmount();
-
-        snack('Could not reach the sheet. You can still enter an expense and it will queue locally.', 'warn');
-      }
-
       function boot() {
         $('pad').addEventListener('click', function (e) {
           var b = e.target.closest('[data-k]');
@@ -2807,33 +2567,42 @@
         window.addEventListener('online', flushQueue);
         renderQueuePill();
 
-        if (!GAS) {
-          $('gear').hidden = false;
-          $('gear').onclick = function () { showConnect(); };
-          $('cfgSave').onclick = tryConnect;
-          $('cfgPin').addEventListener('keydown', function (e) {
-            if (e.key === 'Enter') tryConnect();
-          });
-
-          if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js').catch(function () {});
-          }
-
-          if (!cfg().url) {
-            showConnect();
-            return;
-          }
-        }
-
         api('getBootstrap')
-          .then(applyBootstrap)
-          .catch(function (err) {
-            var m = String(err && err.message || err);
-            if (!GAS && (m.indexOf('passcode') > -1 || m === 'not-configured')) {
-              showConnect(m.indexOf('passcode') > -1 ? 'Wrong passcode. Check it and try again.' : null);
-              return;
+          .then(function (b) {
+            S.categories = b.categories || [];
+            S.today = b.today;
+            S.history = b.history || [];
+
+            var last = store(CKEY);
+
+            if (last && S.categories.indexOf(last) > -1) {
+              S.category = last;
+            } else if (S.categories.length) {
+              S.category = S.categories[0];
             }
-            offlineFallback();
+
+            renderCats();
+            wireDates();
+            applySummary(b.summary);
+            renderAmount();
+            flushQueue();
+          })
+          .catch(function () {
+            S.today = ymd(new Date());
+
+            S.categories = [
+              'Food','Transport','Groceries','Bills','Mobile/Internet',
+              'Health','Shopping','Fashion','Car','Other'
+            ];
+
+            var last = store(CKEY);
+            S.category = (last && S.categories.indexOf(last) > -1) ? last : S.categories[0];
+
+            renderCats();
+            wireDates();
+            renderAmount();
+
+            snack('Could not reach the sheet. You can still enter an expense and it will queue locally.', 'warn');
           });
       }
 
