@@ -1914,14 +1914,10 @@
           });
       }
 
-      /** Same rule as the server: June reads as "Jun – Jul 2026". */
-      function periodLabel(monthNo, year) {
-        var a = MONTH_NAMES[monthNo - 1].slice(0, 3);
-        if (monthNo === 12) {
-          return a + ' ' + year + ' – ' + MONTH_NAMES[0].slice(0, 3) + ' ' + (year + 1);
-        }
-        return a + ' – ' + MONTH_NAMES[monthNo].slice(0, 3) + ' ' + year;
-      }
+      /** Show one calendar month only. */
+function periodLabel(monthNo, year) {
+  return MONTH_NAMES[monthNo - 1] + ' ' + year;
+}
 
       function store(k, v) {
         try {
