@@ -1715,9 +1715,8 @@
         >
       </div>
 
-      <p class="section-label">PAYMENT / ACCOUNT</p>
-      <div class="field-grid">
-        <select class="details compact-select" id="paymentMethod" aria-label="Payment method"></select>
+      <p class="section-label">ACCOUNT</p>
+      <div class="details-wrap">
         <select class="details compact-select" id="expenseAccount" aria-label="Expense account"></select>
       </div>
 
@@ -1850,10 +1849,8 @@
         <input class="money-input" id="editAmount" type="text" inputmode="decimal" placeholder="Amount" autocomplete="off" maxlength="12" style="width:100%;padding:12px 15px;border:1px solid rgba(255,255,255,.10);border-radius:15px;background:rgba(255,255,255,.05);margin-bottom:12px;">
         <select class="details compact-select tool-select" id="editCategory"></select>
         <input class="details" id="editWhere" type="text" placeholder="Where / details" maxlength="200" style="margin-bottom:10px;">
-        <div class="field-grid">
-          <select class="details compact-select" id="editPayment"></select>
-          <select class="details compact-select" id="editAccount"></select>
-        </div>
+        <p class="field-label">Account</p>
+        <select class="details compact-select tool-select" id="editAccount" style="margin-bottom:10px;"></select>
         <input class="details" id="editTags" type="text" placeholder="#office, #family" maxlength="250" style="margin-bottom:10px;">
         <input class="details" id="editDate" type="date" style="margin-bottom:13px;">
         <button class="sheet-save" id="editSave" type="button">Save changes</button>
@@ -2843,8 +2840,8 @@ function periodLabel(monthNo, year) {
           html += '<div class="report-card"><div class="tool-headline" style="margin-bottom:8px">Category changes vs previous month</div>';
           (d.categoryChanges||[]).slice(0,8).forEach(function(c){var cls=c.change<0?'report-positive':c.change>0?'report-negative':'report-muted'; html+='<div class="tool-row-sub" style="display:flex;justify-content:space-between;gap:8px;margin:7px 0"><span>'+escapeHtml(c.category)+'</span><span class="'+cls+'">'+(c.change>0?'+':'')+c.change.toFixed(1)+'%</span></div>';});
           html+='</div>';
-          html += '<div class="report-card"><div class="tool-headline" style="margin-bottom:8px">Payment methods</div>';
-          Object.keys(d.paymentTotals||{}).forEach(function(k){html+='<div class="tool-row-sub" style="display:flex;justify-content:space-between;gap:8px;margin:7px 0"><span>'+escapeHtml(k)+'</span><span>'+money(d.paymentTotals[k])+'</span></div>';});
+          html += '<div class="report-card"><div class="tool-headline" style="margin-bottom:8px">Spending by account</div>';
+          Object.keys(d.accountTotals||{}).forEach(function(k){html+='<div class="tool-row-sub" style="display:flex;justify-content:space-between;gap:8px;margin:7px 0"><span>'+escapeHtml(k)+'</span><span>'+money(d.accountTotals[k])+'</span></div>';});
           html+='</div>';
           toolShell('Spending insights',html);
         }).catch(showToolError);
@@ -2933,15 +2930,15 @@ function periodLabel(monthNo, year) {
       function escapeAttr(s){return escapeHtml(s).replace(/`/g,'&#96;');}
 
       function openEdit(r){
-        S.editId=r.id; $('editAmount').value=r.amount||''; $('editCategory').value=r.category||S.categories[0]||''; $('editWhere').value=r.where||''; $('editPayment').value=r.paymentMethod||'Cash'; $('editAccount').value=r.account||''; $('editTags').value=r.tags||''; $('editDate').value=r.dateIso||S.today||ymd(new Date()); openSheet('edit');
+        S.editId=r.id; $('editAmount').value=r.amount||''; $('editCategory').value=r.category||S.categories[0]||''; $('editWhere').value=r.where||''; $('editAccount').value=r.account||''; $('editTags').value=r.tags||''; $('editDate').value=r.dateIso||S.today||ymd(new Date()); openSheet('edit');
       }
 
       function saveEdit(){
-        var payload={id:S.editId,amount:Number($('editAmount').value),category:$('editCategory').value,where:$('editWhere').value.trim(),paymentMethod:$('editPayment').value||'Cash',account:$('editAccount').value||'',tags:$('editTags').value.trim(),date:$('editDate').value};
+        var payload={id:S.editId,amount:Number($('editAmount').value),category:$('editCategory').value,where:$('editWhere').value.trim(),account:$('editAccount').value||'',tags:$('editTags').value.trim(),date:$('editDate').value};
         api('updateExpense',payload).then(function(res){applySummary(res.summary);closeSheet();snack('Expense updated');if(res.budgetWarning)snack(res.budgetWarning.category+' budget is '+Math.round(res.budgetWarning.percent)+'% used.','warn');}).catch(function(e){snack(e.message||'Could not update','err');});
       }
 
-      function exportCsv(){api('getExportBundle').then(function(b){var rows=[['Expenses'],['ID','Logged at','Date','Day','Month','Month no','Year','Amount','Category','Where','Payment method','Account','Tags']].concat(b.expenses||[]).concat([[],['Income'],['ID','Logged at','Date','Month','Month no','Year','Amount','Source','Account','Notes']]).concat(b.income||[]).concat([[],['Held Money'],['ID','Logged at','Date','Account','Amount','Whose money?','Purpose','Notes']]).concat(b.heldMoney||[]);var csv=rows.map(function(row){return row.map(function(x){var s=String(x==null?'':x);return '"'+s.replace(/"/g,'""')+'"';}).join(',');}).join('\n');downloadBlob(csv,'xpense-backup.csv','text/csv');}).catch(function(){snack('Could not export CSV','err');});}
+      function exportCsv(){api('getExportBundle').then(function(b){var rows=[['Expenses'],['ID','Logged at','Date','Day','Month','Month no','Year','Amount','Category','Where','Account','Tags']].concat(b.expenses||[]).concat([[],['Income'],['ID','Logged at','Date','Month','Month no','Year','Amount','Source','Account','Notes']]).concat(b.income||[]).concat([[],['Held Money'],['ID','Logged at','Date','Account','Amount','Whose money?','Purpose','Notes']]).concat(b.heldMoney||[]);var csv=rows.map(function(row){return row.map(function(x){var s=String(x==null?'':x);return '"'+s.replace(/"/g,'""')+'"';}).join(',');}).join('\n');downloadBlob(csv,'xpense-backup.csv','text/csv');}).catch(function(){snack('Could not export CSV','err');});}
       function exportJson(){api('getExportBundle').then(function(b){downloadBlob(JSON.stringify(b,null,2),'xpense-backup.json','application/json');}).catch(function(){snack('Could not export JSON','err');});}
       function downloadBlob(text,name,type){var blob=new Blob([text],{type:type});var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(a.href);},1000);}
       function printMonthlyReport(){
@@ -3044,7 +3041,6 @@ function periodLabel(monthNo, year) {
           category: S.category,
           where: $('where').value.trim(),
           date: S.date,
-          paymentMethod: $('paymentMethod').value || 'Cash',
           account: $('expenseAccount').value || '',
           tags: $('tags').value.trim(),
           clientId: uid()
@@ -3139,15 +3135,12 @@ function periodLabel(monthNo, year) {
         S.accounts = b.accounts || [];
         S.heldMoney = b.heldMoney || [];
         S.heldSummary = b.heldSummary || {total:0,byAccount:[]};
-        S.paymentMethods = b.paymentMethods || ['Cash','Card','bKash','Nagad','Bank'];
         S.incomeSources = b.incomeSources || ['Salary','Freelance','Bonus','Gift','Refund','Other','Extra'];
 
-        populateSelect('paymentMethod', S.paymentMethods);
         populateSelect('expenseAccount', accountNames(true), 'No account');
         populateSelect('incomeSource', S.incomeSources);
         populateSelect('incomeAccount', accountNames(false));
         populateSelect('editCategory', S.categories);
-        populateSelect('editPayment', S.paymentMethods);
         populateSelect('editAccount', accountNames(true), 'No account');
 
         var last = store(CKEY);
@@ -3167,14 +3160,11 @@ function periodLabel(monthNo, year) {
         S.today = ymd(new Date());
         S.categories = ['Food','Transport','Groceries','Bills','Mobile/Internet','Health','Shopping','Fashion','Car','Other'];
         S.accounts = [];
-        S.paymentMethods = ['Cash','Card','bKash','Nagad','Bank'];
         S.incomeSources = ['Salary','Freelance','Bonus','Gift','Refund','Other','Extra'];
-        populateSelect('paymentMethod', S.paymentMethods);
         populateSelect('expenseAccount', [], 'No account');
         populateSelect('incomeSource', S.incomeSources);
         populateSelect('incomeAccount', [], 'No account');
         populateSelect('editCategory', S.categories);
-        populateSelect('editPayment', S.paymentMethods);
         populateSelect('editAccount', [], 'No account');
         var last = store(CKEY);
         S.category = (last && S.categories.indexOf(last) > -1) ? last : S.categories[0];
