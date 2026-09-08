@@ -6,9 +6,9 @@
  * because a stale balance is worse than no balance. Expenses entered offline
  * are queued by the app itself, not here.
  *
- * Bump CACHE when you change index.html so phones pick the new version up.
+ * Bump CACHE whenever you change index.html or other shell files.
  */
-const CACHE = 'xpense-v4';
+const CACHE = 'xpense-v5';
 
 const SHELL = [
   './',
@@ -41,12 +41,10 @@ self.addEventListener('activate', function (e) {
 self.addEventListener('fetch', function (e) {
   const req = e.request;
 
-  // Never touch the sheet API or anything that is not a plain page load.
   if (req.method !== 'GET') return;
   if (req.url.indexOf('script.google') !== -1) return;
   if (new URL(req.url).origin !== self.location.origin) return;
 
-  // Network first so a fresh deploy is picked up, cache as the fallback.
   e.respondWith(
     fetch(req)
       .then(function (res) {
