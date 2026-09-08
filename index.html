@@ -2013,12 +2013,41 @@
         if (fn === 'deleteEntry') payload = { id: arg };
         if (fn === 'getMonthlyHistory') payload = { limit: arg };
 
+        var readOnly = fn === 'getBootstrap' || fn === 'getSummary' ||
+          fn === 'getMonthDetail' || fn === 'getMonthlyHistory';
+
+        if (readOnly) {
+          var qs = new URLSearchParams({
+            action: fn,
+            token: c.pin,
+            payload: JSON.stringify(payload || {})
+          });
+
+          return fetch(c.url + (c.url.indexOf('?') > -1 ? '&' : '?') + qs.toString(), {
+            method: 'GET',
+            cache: 'no-store',
+            redirect: 'follow'
+          })
+            .then(function (r) {
+              if (!r.ok) throw new Error('HTTP ' + r.status);
+              return r.json();
+            })
+            .then(function (j) {
+              if (!j || !j.ok) throw new Error((j && j.error) || 'Request failed');
+              return j.data;
+            });
+        }
+
         return fetch(c.url, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          redirect: 'follow',
           body: JSON.stringify({ action: fn, token: c.pin, payload: payload || {} })
         })
-          .then(function (r) { return r.json(); })
+          .then(function (r) {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.json();
+          })
           .then(function (j) {
             if (!j || !j.ok) throw new Error((j && j.error) || 'Request failed');
             return j.data;
@@ -3172,6 +3201,28 @@ function periodLabel(monthNo, year) {
         $('connect').hidden = false;
       }
 
+      function apiWithCredentials_(fn, arg, url, pin) {
+        var payload = arg || {};
+        var qs = new URLSearchParams({
+          action: fn,
+          token: pin || '',
+          payload: JSON.stringify(payload)
+        });
+        return fetch(url + (url.indexOf('?') > -1 ? '&' : '?') + qs.toString(), {
+          method: 'GET',
+          cache: 'no-store',
+          redirect: 'follow'
+        })
+          .then(function(r) {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.json();
+          })
+          .then(function(j) {
+            if (!j || !j.ok) throw new Error((j && j.error) || 'Request failed');
+            return j.data;
+          });
+      }
+
       function tryConnect() {
         var url = $('cfgUrl').value.trim();
         var pin = $('cfgPin').value;
@@ -3184,15 +3235,17 @@ function periodLabel(monthNo, year) {
         $('cfgSave').disabled = true;
         $('cfgSave').textContent = 'Connecting…';
 
-        store(UKEY, url);
-        store(PKEY, pin);
-
-        api('getBootstrap')
+        // Save only after the URL passes validation. The connection is considered
+        // valid only when getBootstrap succeeds with the supplied URL + passcode.
+        apiWithCredentials_('getBootstrap', {}, url, pin)
           .then(function (b) {
+            store(UKEY, url);
+            store(PKEY, pin);
             $('cfgSave').disabled = false;
             $('cfgSave').textContent = 'Connect';
             $('connect').hidden = true;
             applyBootstrap(b);
+            snack('Connected successfully.', null);
           })
           .catch(function (err) {
             $('cfgSave').disabled = false;
@@ -3281,6 +3334,9 @@ function periodLabel(monthNo, year) {
         if ($('incomeSource')) $('incomeSource').onchange = function(){ setSalarySource(this.value); };
 
         if ($('gear')) $('gear').onclick = function(){ showConnect(); };
+        if ($('cfgSave')) $('cfgSave').onclick = tryConnect;
+        if ($('cfgPin')) $('cfgPin').addEventListener('keydown', function(e){ if(e.key === 'Enter') tryConnect(); });
+        if ($('cfgUrl')) $('cfgUrl').addEventListener('keydown', function(e){ if(e.key === 'Enter') tryConnect(); });
 
         watchTotalCard();
 
