@@ -1496,6 +1496,13 @@
     .progress-mini > div{height:100%;border-radius:50px;background:linear-gradient(90deg,#10B981,#34D399);}
     .budget-warning{margin-top:7px;font-size:10.5px;font-weight:700;}
     .tool-select{width:100%;min-height:44px;margin-bottom:9px;}
+    .account-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:0 0 14px;}
+    .account-mini{padding:9px 8px;border-radius:14px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08);min-width:0;}
+    .account-mini .name{font-size:9px;font-weight:800;letter-spacing:.10em;text-transform:uppercase;color:rgba(255,255,255,.40);margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .account-mini .own{font-size:13px;font-weight:900;color:#34D399;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .tool-row-actions .tool-danger{flex:0 0 auto;}
+    .tool-row-actions .tool-input{min-width:0;}
+    .income-records{margin-top:12px;}
     @media (max-width:360px){.field-grid,.tool-grid,.tool-kpis{grid-template-columns:1fr 1fr;gap:7px}.tool-btn{min-height:54px;padding:10px}.tool-row{padding:10px}.tool-row-actions{gap:6px}.tool-save,.tool-danger{padding:8px 10px}}
 
     @media (max-width:360px){
@@ -1647,6 +1654,8 @@
           </div>
         </div>
       </div>
+
+      <div class="account-strip" id="accountStrip" aria-label="Account balances"></div>
 
       <div class="stats">
         <div class="stat" id="todayStat" style="--stat-color:#7C3AED;">
@@ -1813,6 +1822,8 @@
           </div>
         </div>
 
+        <div class="income-records" id="incomeRecords"></div>
+
         <p class="sheet-note">
           Saving replaces this figure for this month, it never adds to it, so
           nothing gets counted twice. Use ‹ and › to fix an earlier month.
@@ -1873,7 +1884,7 @@
             <button class="tool-btn" data-tool="insights" type="button">📊 Insights<small>Where the money went</small></button>
             <button class="tool-btn" data-tool="compare" type="button">↕ Compare<small>Month vs previous</small></button>
             <button class="tool-btn" data-tool="category" type="button">🔎 Category<small>Food, Car, Bills…</small></button>
-            <button class="tool-btn" data-tool="accounts" type="button">💳 Accounts<small>Cash, bKash, Bank…</small></button>
+            <button class="tool-btn" data-tool="accounts" type="button">💳 Accounts<small>Cash, bKash, Bank</small></button>
             <button class="tool-btn" data-tool="held" type="button">👥 Money held<small>Other people's money</small></button>
             <button class="tool-btn" data-tool="transfer" type="button">↔ Transfer<small>Move money between accounts</small></button>
             <button class="tool-btn" data-tool="closing" type="button">📘 Month close<small>Close and snapshot a month</small></button>
@@ -2321,6 +2332,7 @@ function periodLabel(monthNo, year) {
         renderTotal(sum);
         renderSummary(sum);
         renderBalance(sum);
+        renderAccountStrip(S.accounts || []);
       }
 
       /**
@@ -2330,37 +2342,34 @@ function periodLabel(monthNo, year) {
        */
       function renderTotal(sum) {
         var received = Number(sum.totalIncome || 0);
-        var spent    = Number(sum.totalSpent || 0);
-        var inHand   = received - spent;
-
-        $('totalIn').textContent  = money(received);
+        var spent = Number(sum.totalSpent || 0);
+        var own = (S.accounts || []).reduce(function(total, a) { return total + Number(a.ownBalance || 0); }, 0);
+        $('totalIn').textContent = money(received);
         $('totalOut').textContent = money(spent);
 
-        // Nothing has ever been recorded as coming in, so a big red negative
-        // would just be the expense total wearing a minus sign. Prompt instead.
-        if (received <= 0) {
-          $('totalCard').style.setProperty('--total-color', '#94A3B8');
-          $('topbar').style.setProperty('--total-color', '#94A3B8');
-          $('totalCur').hidden = true;
-          $('totalVal').parentNode.classList.add('unset');
-          $('totalVal').textContent = 'Not set yet';
-          $('topbarVal').textContent = '—';
-          $('totalHint').hidden = false;
-          $('totalHint').textContent =
-            'Tap Salary below and enter what you earn, or what you already have, and your running total appears here.';
-          return;
-        }
-
-        var color = inHand < 0 ? '#F87171' : inHand === 0 ? '#94A3B8' : '#34D399';
-
+        var color = own < 0 ? '#F87171' : own === 0 ? '#94A3B8' : '#34D399';
         $('totalCard').style.setProperty('--total-color', color);
         $('topbar').style.setProperty('--total-color', color);
-
         $('totalCur').hidden = false;
-        $('totalHint').hidden = true;
+        $('totalHint').hidden = false;
         $('totalVal').parentNode.classList.remove('unset');
-        $('totalVal').textContent = (inHand < 0 ? '-' : '') + num(Math.abs(inHand));
-        $('topbarVal').textContent = (inHand < 0 ? '-৳' : '৳') + num(Math.abs(inHand));
+        $('totalVal').textContent = (own < 0 ? '-' : '') + num(Math.abs(own));
+        $('topbarVal').textContent = (own < 0 ? '-৳' : '৳') + num(Math.abs(own));
+        $('totalHint').textContent = 'Your own money across Cash, bKash and Bank.';
+      }
+
+      function renderAccountStrip(list) {
+        var box = $('accountStrip');
+        if (!box) return;
+        box.innerHTML = '';
+        (list || []).forEach(function(a) {
+          var el = document.createElement('div');
+          el.className = 'account-mini';
+          el.innerHTML = '<div class="name"></div><div class="own"></div>';
+          el.querySelector('.name').textContent = a.name;
+          el.querySelector('.own').textContent = money(a.ownBalance || 0);
+          box.appendChild(el);
+        });
       }
 
       /** Slide the sticky bar in once the big total card scrolls out of view. */
@@ -2508,8 +2517,9 @@ function periodLabel(monthNo, year) {
       function removeEntry(id) {
         api('deleteEntry', id)
           .then(function (res) {
+            if (res.accounts) { S.accounts = res.accounts; }
             applySummary(res.summary);
-            snack('Entry deleted');
+            snack('Entry deleted. Account balance restored.');
           })
           .catch(function () {
             snack('Could not delete. Try again.', 'err');
@@ -2600,6 +2610,7 @@ function periodLabel(monthNo, year) {
             if ($('incomeAccount')) $('incomeAccount').value = (d.sourceAccounts && d.sourceAccounts[S.salSource]) || accountNames(false)[0] || '';
             fillSalaryInput();
             $('salSpent').textContent = money(d.spent);
+            renderIncomeRecords();
             updateSalaryPreview();
           })
           .catch(function () {
@@ -2644,7 +2655,9 @@ function periodLabel(monthNo, year) {
           .then(function (res) {
             S.salDetail = res.month;
             S.history = res.history || S.history;
+            if (res.accounts) S.accounts = res.accounts;
             applySummary(res.summary);
+            renderIncomeRecords();
             $('salSave').disabled = false;
             $('salSave').textContent = 'Save';
             closeSheet();
@@ -2655,6 +2668,20 @@ function periodLabel(monthNo, year) {
             $('salSave').textContent = 'Save';
             snack('Could not save. Check your connection.', 'err');
           });
+      }
+
+      function renderIncomeRecords() {
+        var box = $('incomeRecords');
+        if (!box) return;
+        api('getIncomeRecords', {limit: 30}).then(function(list) {
+          var rows = (list || []).filter(function(r) { return r.year === S.salYear && r.monthNo === S.salMonthNo; });
+          box.innerHTML = '<div class="report-card"><div class="tool-headline" style="margin-bottom:8px">Income entries for ' + escapeHtml(periodLabel(S.salMonthNo,S.salYear)) + '</div>' +
+            (rows.length ? rows.map(function(r) {
+              return '<div class="tool-row"><div class="tool-row-head"><span class="tool-row-title">' + escapeHtml(r.source) + '</span><span class="report-positive">' + money(r.amount) + '</span></div>' +
+                '<div class="tool-row-sub">' + escapeHtml(r.account) + (r.notes ? ' · ' + escapeHtml(r.notes) : '') + '</div>' +
+                '<div class="tool-row-actions"><button class="tool-save" type="button" data-edit-income="' + escapeAttr(r.id) + '">Edit</button><button class="tool-danger" type="button" data-delete-income="' + escapeAttr(r.id) + '">Delete</button></div></div>';
+            }).join('') : '<div class="report-muted">No income entries for this month.</div>') + '</div>';
+        }).catch(function() { box.innerHTML = ''; });
       }
 
       /* ───────── history ───────── */
@@ -2809,7 +2836,7 @@ function periodLabel(monthNo, year) {
             html += '<div class="tool-row-sub">Spent '+money(r.spent)+(r.budget?' · Budget '+money(r.budget)+' · Left '+money(r.left):'')+'</div>';
             if(r.budget) html += '<div class="progress-mini"><div style="width:'+Math.min(100,pct)+'%"></div></div>';
             if(r.budget && pct>=80) html += '<div class="budget-warning '+color+'">'+(pct>=100?'Over budget':pct>=90?'90%+ used':'80%+ used')+'</div>';
-            html += '<div class="tool-row-actions"><input class="tool-input" data-budget-cat="'+escapeAttr(r.category)+'" value="'+(r.budget||'')+'" inputmode="decimal" placeholder="Monthly budget"><button class="tool-save" data-save-budget="'+escapeAttr(r.category)+'">Save</button></div></div>';
+            html += '<div class="tool-row-actions"><input class="tool-input" data-budget-cat="'+escapeAttr(r.category)+'" value="'+(r.budget||'')+'" inputmode="decimal" placeholder="Monthly budget"><button class="tool-save" data-save-budget="'+escapeAttr(r.category)+'">Save</button><button class="tool-danger" data-delete-budget="'+escapeAttr(r.category)+'">Delete</button></div></div>';
           });
           toolShell('Monthly budgets',html);
         }).catch(showToolError);
@@ -2870,23 +2897,24 @@ function periodLabel(monthNo, year) {
       function renderAccountsTool(){
         api('getAccountBalances').then(function(list){
           S.accounts=list||[];
-          var html='<div class="report-muted" style="margin-bottom:10px">Gross balance is the money physically in the account. Money held for others is shown separately and is not your own money.</div>';
+          var html='<div class="report-muted" style="margin-bottom:10px">Only Cash, bKash and Bank are supported. Set each account’s starting own balance here. Starting balance is not income and does not change savings. Account balance below is physical money; held money is excluded from own money.</div>';
           (list||[]).forEach(function(a){
             html+='<div class="tool-row"><div class="tool-row-head"><span class="tool-row-title">'+escapeHtml(a.name)+'</span><span class="report-positive">'+money(a.balance)+'</span></div>';
-            html+='<div class="tool-row-sub">'+escapeHtml(a.type)+' · Own '+money(a.ownBalance||0)+' · Held for others '+money(a.held||0)+'</div>';
-            html+='<div class="tool-row-actions"><input class="tool-input" data-acct-name="'+escapeAttr(a.name)+'" value="'+a.opening+'" inputmode="decimal"><button class="tool-save" data-save-account="'+escapeAttr(a.name)+'">Update</button></div></div>';
+            html+='<div class="tool-row-sub">Own '+money(a.ownBalance||0)+' · Held for others '+money(a.held||0)+'</div>';
+            html+='<div class="tool-row-actions"><input class="tool-input" data-acct-name="'+escapeAttr(a.name)+'" value="'+(a.opening||0)+'" inputmode="decimal"><button class="tool-save" data-save-account="'+escapeAttr(a.name)+'">Save</button></div></div>';
           });
-          html+='<div class="report-card"><div class="tool-headline">Add / replace account</div><input class="details" id="newAccountName" placeholder="Account name" style="margin-bottom:8px"><select class="details compact-select tool-select" id="newAccountType"><option>Cash</option><option>Mobile wallet</option><option>Bank</option><option>Card</option><option>Other</option></select><input class="details" id="newAccountOpening" inputmode="decimal" placeholder="Opening balance" style="margin-bottom:8px"><button class="tool-save" id="saveNewAccount" type="button">Save account</button></div>';
+          html+='<div class="report-card"><div class="tool-headline">Current balance meaning</div><div class="report-muted">Own = starting own balance + income − expenses ± transfers. Held = money belonging to others. Gross = Own + Held.</div></div>';
           toolShell('Accounts',html);
         }).catch(showToolError);
       }
 
       function renderHeldTool(){
         api('getHeldMoney',{limit:100}).then(function(list){
+          S.heldMoney=list||[];
           api('getHeldSummary').then(function(sum){
             var opts=accountNames(false).map(function(a){return '<option value="'+escapeAttr(a)+'">'+escapeHtml(a)+'</option>';}).join('');
-            var html='<div class="report-card"><div class="report-big">'+money(sum.total||0)+'</div><div class="report-muted">Currently held for other people. This is excluded from your income, spending, savings and own-money total.</div></div>';
-            html+='<div class="report-muted" style="margin-bottom:10px">Add money that belongs to someone else but is currently sitting in your Cash, Bank, bKash, or another account.</div>';
+            var html='<div class="report-card"><div class="report-big">'+money(sum.total||0)+'</div><div class="report-muted">Currently held for other people. This amount is included in physical account balances but excluded from your income, expenses, savings and own-money total.</div></div>';
+            html+='<div class="report-muted" style="margin-bottom:10px">Add money that belongs to someone else and choose whether it is physically kept in Cash, bKash or Bank.</div>';
             html+='<input class="details" id="heldOwner" placeholder="Whose money? e.g. Rahim" style="margin-bottom:8px">';
             html+='<input class="details" id="heldPurpose" placeholder="Purpose / what it is for" style="margin-bottom:8px">';
             html+='<input class="details" id="heldAmount" inputmode="decimal" placeholder="Amount" style="margin-bottom:8px">';
@@ -2894,7 +2922,7 @@ function periodLabel(monthNo, year) {
             html+='<input class="details" id="heldNotes" placeholder="Short note (optional)" style="margin:8px 0">';
             html+='<button class="tool-save" id="saveHeld" type="button">Add held money</button>';
             html+='<div class="report-card" style="margin-top:12px"><div class="tool-headline">Currently held</div>';
-            html+=(list||[]).map(function(r){return '<div class="tool-row"><div class="tool-row-head"><span class="tool-row-title">'+escapeHtml(r.owner)+' · '+escapeHtml(r.purpose)+'</span><span class="report-warning">'+money(r.amount)+'</span></div><div class="tool-row-sub">'+escapeHtml(r.account)+' · '+escapeHtml(r.date)+(r.notes?' · '+escapeHtml(r.notes):'')+'</div><div class="tool-row-actions"><button class="tool-save" data-delete-held="'+escapeAttr(r.id)+'">Returned / remove</button></div></div>';}).join('')||'<div class="report-muted">No money is currently marked as held for others.</div>';
+            html+=(list||[]).map(function(r){return '<div class="tool-row"><div class="tool-row-head"><span class="tool-row-title">'+escapeHtml(r.owner)+' · '+escapeHtml(r.purpose)+'</span><span class="report-warning">'+money(r.amount)+'</span></div><div class="tool-row-sub">'+escapeHtml(r.account)+' · '+escapeHtml(r.date)+(r.notes?' · '+escapeHtml(r.notes):'')+'</div><div class="tool-row-actions"><button class="tool-save" data-edit-held="'+escapeAttr(r.id)+'">Edit</button><button class="tool-danger" data-delete-held="'+escapeAttr(r.id)+'">Returned / delete</button></div></div>';}).join('')||'<div class="report-muted">No money is currently marked as held for others.</div>';
             html+='</div>';
             toolShell('Money held for others',html);
             $('saveHeld').onclick=function(){api('addHeldMoney',{amount:Number($('heldAmount').value),owner:$('heldOwner').value.trim(),purpose:$('heldPurpose').value.trim(),account:$('heldAccount').value||'',notes:$('heldNotes').value.trim(),date:S.today}).then(function(){snack('Held money added');renderHeldTool();}).catch(function(e){snack(e.message||'Could not add held money','err');});};
@@ -2902,21 +2930,44 @@ function periodLabel(monthNo, year) {
         }).catch(showToolError);
       }
 
+      function openHeldEdit(id){
+        var r=(S.heldMoney||[]).find(function(x){return String(x.id)===String(id);});
+        if(!r) return;
+        var opts=accountNames(false).map(function(a){return '<option value="'+escapeAttr(a)+'" '+(a===r.account?'selected':'')+'>'+escapeHtml(a)+'</option>';}).join('');
+        var html='<div class="report-card"><div class="tool-headline">Edit held money</div><input class="details" id="ehOwner" value="'+escapeAttr(r.owner)+'" placeholder="Whose money?" style="margin-bottom:8px"><input class="details" id="ehPurpose" value="'+escapeAttr(r.purpose)+'" placeholder="Purpose" style="margin-bottom:8px"><input class="details" id="ehAmount" value="'+r.amount+'" inputmode="decimal" placeholder="Amount" style="margin-bottom:8px"><select class="details compact-select tool-select" id="ehAccount">'+opts+'</select><input class="details" id="ehNotes" value="'+escapeAttr(r.notes)+'" placeholder="Notes" style="margin-bottom:8px"><input class="details" id="ehDate" type="date" value="'+escapeAttr(r.date)+'" style="margin-bottom:9px"><div class="tool-row-actions"><button class="tool-save" id="saveHeldEdit">Save changes</button><button class="tool-danger" id="cancelHeldEdit">Cancel</button></div></div>';
+        toolShell('Edit held money',html);
+        $('saveHeldEdit').onclick=function(){api('updateHeldMoney',{id:r.id,owner:$('ehOwner').value.trim(),purpose:$('ehPurpose').value.trim(),amount:Number($('ehAmount').value),account:$('ehAccount').value,notes:$('ehNotes').value.trim(),date:$('ehDate').value}).then(function(){snack('Held money updated');renderHeldTool();}).catch(function(e){snack(e.message||'Could not update','err');});};
+        $('cancelHeldEdit').onclick=renderHeldTool;
+      }
+
       function renderTransferTool(){
         api('getAccountBalances').then(function(list){
           S.accounts=list||[];
           var opts=(list||[]).map(function(a){return '<option value="'+escapeAttr(a.name)+'">'+escapeHtml(a.name)+'</option>';}).join('');
-          var html='<div class="report-muted" style="margin-bottom:10px">Transfers move money between accounts. They do not count as income or expense.</div><select class="details compact-select tool-select" id="transferFrom">'+opts+'</select><select class="details compact-select tool-select" id="transferTo">'+opts+'</select><input class="details" id="transferAmount" inputmode="decimal" placeholder="Amount" style="margin-bottom:8px"><input class="details" id="transferNote" placeholder="Note (optional)" style="margin-bottom:8px"><button class="tool-save" id="saveTransfer" type="button">Transfer</button><div id="transferList" style="margin-top:12px"></div>';
+          var html='<div class="report-muted" style="margin-bottom:10px">Transfers move money between Cash, bKash and Bank. They never count as income, expense or savings.</div><select class="details compact-select tool-select" id="transferFrom">'+opts+'</select><select class="details compact-select tool-select" id="transferTo">'+opts+'</select><input class="details" id="transferAmount" inputmode="decimal" placeholder="Amount" style="margin-bottom:8px"><input class="details" id="transferNote" placeholder="Note (optional)" style="margin-bottom:8px"><button class="tool-save" id="saveTransfer" type="button">Transfer</button><div id="transferList" style="margin-top:12px"></div>';
           toolShell('Transfer money',html);
           loadTransfers();
-          $('saveTransfer').onclick=function(){api('addTransfer',{from:$('transferFrom').value,to:$('transferTo').value,amount:Number($('transferAmount').value),date:ymd(new Date()),note:$('transferNote').value.trim()}).then(function(){snack('Transfer saved');renderTransferTool();}).catch(function(e){snack(e.message||'Could not transfer','err');});};
+          $('saveTransfer').onclick=function(){api('addTransfer',{from:$('transferFrom').value,to:$('transferTo').value,amount:Number($('transferAmount').value),date:ymd(new Date()),note:$('transferNote').value.trim()}).then(function(res){if(res.accounts)S.accounts=res.accounts;snack('Transfer saved');renderTransferTool();}).catch(function(e){snack(e.message||'Could not transfer','err');});};
         }).catch(showToolError);
       }
 
-      function loadTransfers(){api('getTransfers',{limit:25}).then(function(list){var b=$('transferList');if(!b)return;b.innerHTML=(list||[]).map(function(r){return '<div class="tool-row"><div class="tool-row-head"><span class="tool-row-title">'+escapeHtml(r.from)+' → '+escapeHtml(r.to)+'</span><span class="report-positive">'+money(r.amount)+'</span></div><div class="tool-row-sub">'+escapeHtml(r.date)+(r.note?' · '+escapeHtml(r.note):'')+'</div></div>';}).join('')||'<div class="report-muted">No transfers yet.</div>';});}
+      function loadTransfers(){api('getTransfers',{limit:25}).then(function(list){var b=$('transferList');if(!b)return;b.innerHTML=(list||[]).map(function(r){return '<div class="tool-row"><div class="tool-row-head"><span class="tool-row-title">'+escapeHtml(r.from)+' → '+escapeHtml(r.to)+'</span><span class="report-positive">'+money(r.amount)+'</span></div><div class="tool-row-sub">'+escapeHtml(r.date)+(r.note?' · '+escapeHtml(r.note):'')+'</div><div class="tool-row-actions"><button class="tool-save" data-edit-transfer="'+escapeAttr(r.id)+'">Edit</button><button class="tool-danger" data-delete-transfer="'+escapeAttr(r.id)+'">Delete</button></div></div>';}).join('')||'<div class="report-muted">No transfers yet.</div>';}).catch(function(){});}
+
+      function openTransferEdit(id){
+        api('getTransfers',{limit:100}).then(function(list){
+          var r=(list||[]).find(function(x){return String(x.id)===String(id);});
+          if(!r)return;
+          var opts=(S.accounts||[]).map(function(a){return '<option value="'+escapeAttr(a.name)+'" '+(a.name===r.from?'selected':'')+'>'+escapeHtml(a.name)+'</option>';}).join('');
+          var toOpts=(S.accounts||[]).map(function(a){return '<option value="'+escapeAttr(a.name)+'" '+(a.name===r.to?'selected':'')+'>'+escapeHtml(a.name)+'</option>';}).join('');
+          var html='<div class="report-card"><div class="tool-headline">Edit transfer</div><select class="details compact-select tool-select" id="etFrom">'+opts+'</select><select class="details compact-select tool-select" id="etTo">'+toOpts+'</select><input class="details" id="etAmount" value="'+r.amount+'" inputmode="decimal" style="margin-bottom:8px"><input class="details" id="etNote" value="'+escapeAttr(r.note)+'" placeholder="Note" style="margin-bottom:8px"><input class="details" id="etDate" type="date" value="'+escapeAttr(r.dateIso)+'" style="margin-bottom:9px"><div class="tool-row-actions"><button class="tool-save" id="saveTransferEdit">Save changes</button><button class="tool-danger" id="cancelTransferEdit">Cancel</button></div></div>';
+          toolShell('Edit transfer',html);
+          $('saveTransferEdit').onclick=function(){api('updateTransfer',{id:r.id,from:$('etFrom').value,to:$('etTo').value,amount:Number($('etAmount').value),note:$('etNote').value.trim(),date:$('etDate').value}).then(function(){snack('Transfer updated');renderTransferTool();}).catch(function(e){snack(e.message||'Could not update','err');});};
+          $('cancelTransferEdit').onclick=renderTransferTool;
+        }).catch(showToolError);
+      }
 
       function renderClosingTool(){
-        api('getMonthClosing',{year:S.toolYear,monthNo:S.toolMonthNo}).then(function(d){var html=toolMonthNav();html+='<div class="tool-kpis"><div class="tool-kpi"><div class="k">Income</div><div class="v">'+money(d.income)+'</div></div><div class="tool-kpi"><div class="k">Expenses</div><div class="v">'+money(d.spent)+'</div></div><div class="tool-kpi"><div class="k">Saved</div><div class="v report-positive">'+money(d.saved)+'</div></div><div class="tool-kpi"><div class="k">Savings rate</div><div class="v">'+d.savingsRate.toFixed(1)+'%</div></div></div><div class="report-card"><div class="report-big">Carry in '+money(d.carryIn)+'</div><div class="report-muted">Carry out '+money(d.carryOut)+'</div></div><button class="tool-save" id="closeMonthBtn" type="button">Close / snapshot this month</button>' ;toolShell('Month closing',html);$('closeMonthBtn').onclick=function(){api('closeMonth',{year:S.toolYear,monthNo:S.toolMonthNo}).then(function(){snack('Month snapshot saved');}).catch(function(e){snack(e.message||'Could not close month','err');});};}).catch(showToolError);
+        api('getMonthClosing',{year:S.toolYear,monthNo:S.toolMonthNo}).then(function(d){var html=toolMonthNav();html+='<div class="tool-kpis"><div class="tool-kpi"><div class="k">Income</div><div class="v">'+money(d.income)+'</div></div><div class="tool-kpi"><div class="k">Expenses</div><div class="v">'+money(d.spent)+'</div></div><div class="tool-kpi"><div class="k">Saved</div><div class="v report-positive">'+money(d.saved)+'</div></div><div class="tool-kpi"><div class="k">Savings rate</div><div class="v">'+d.savingsRate.toFixed(1)+'%</div></div></div><div class="report-card"><div class="report-big">Carry in '+money(d.carryIn)+'</div><div class="report-muted">Carry out '+money(d.carryOut)+'</div></div><button class="tool-save" id="closeMonthBtn" type="button">Save / update snapshot</button><button class="tool-danger" id="deleteMonthBtn" type="button" style="width:100%;margin-top:8px">Delete snapshot</button>' ;toolShell('Month closing',html);$('closeMonthBtn').onclick=function(){api('closeMonth',{year:S.toolYear,monthNo:S.toolMonthNo}).then(function(){snack('Month snapshot saved');renderClosingTool();}).catch(function(e){snack(e.message||'Could not close month','err');});};$('deleteMonthBtn').onclick=function(){api('deleteMonthClosing',{year:S.toolYear,monthNo:S.toolMonthNo}).then(function(){snack('Month snapshot deleted');renderClosingTool();}).catch(function(e){snack(e.message||'Could not delete snapshot','err');});};}).catch(showToolError);
       }
 
       function renderExportTool(){
@@ -2935,7 +2986,7 @@ function periodLabel(monthNo, year) {
 
       function saveEdit(){
         var payload={id:S.editId,amount:Number($('editAmount').value),category:$('editCategory').value,where:$('editWhere').value.trim(),account:$('editAccount').value||'',tags:$('editTags').value.trim(),date:$('editDate').value};
-        api('updateExpense',payload).then(function(res){applySummary(res.summary);closeSheet();snack('Expense updated');if(res.budgetWarning)snack(res.budgetWarning.category+' budget is '+Math.round(res.budgetWarning.percent)+'% used.','warn');}).catch(function(e){snack(e.message||'Could not update','err');});
+        api('updateExpense',payload).then(function(res){if(res.accounts)S.accounts=res.accounts;applySummary(res.summary);closeSheet();snack('Expense updated. Account balance recalculated.');if(res.budgetWarning)snack(res.budgetWarning.category+' budget is '+Math.round(res.budgetWarning.percent)+'% used.','warn');}).catch(function(e){snack(e.message||'Could not update','err');});
       }
 
       function exportCsv(){api('getExportBundle').then(function(b){var rows=[['Expenses'],['ID','Logged at','Date','Day','Month','Month no','Year','Amount','Category','Where','Account','Tags']].concat(b.expenses||[]).concat([[],['Income'],['ID','Logged at','Date','Month','Month no','Year','Amount','Source','Account','Notes']]).concat(b.income||[]).concat([[],['Held Money'],['ID','Logged at','Date','Account','Amount','Whose money?','Purpose','Notes']]).concat(b.heldMoney||[]);var csv=rows.map(function(row){return row.map(function(x){var s=String(x==null?'':x);return '"'+s.replace(/"/g,'""')+'"';}).join(',');}).join('\n');downloadBlob(csv,'xpense-backup.csv','text/csv');}).catch(function(){snack('Could not export CSV','err');});}
@@ -3001,17 +3052,43 @@ function periodLabel(monthNo, year) {
           api('setBudget',{year:S.toolYear,monthNo:S.toolMonthNo,category:cat,budget:value}).then(function(){snack('Budget saved');renderBudgetTool();}).catch(function(err){snack(err.message||'Could not save budget','err');});
           return;
         }
+        var editIncome = e.target.closest('[data-edit-income]');
+        if (editIncome) {
+          var iid = editIncome.getAttribute('data-edit-income');
+          api('getIncomeRecords',{limit:200}).then(function(list){var r=(list||[]).find(function(x){return String(x.id)===String(iid);});if(r){S.salYear=r.year;S.salMonthNo=r.monthNo;setSalarySource(r.source);openSheet('sal');loadSalaryMonth();}}).catch(function(err){snack(err.message||'Could not load income','err');});
+          return;
+        }
+        var deleteIncome = e.target.closest('[data-delete-income]');
+        if (deleteIncome) {
+          var did = deleteIncome.getAttribute('data-delete-income');
+          api('deleteIncome',did).then(function(res){if(res.accounts)S.accounts=res.accounts;applySummary(res.summary);snack('Income deleted. Account balance restored.');renderIncomeRecords();}).catch(function(err){snack(err.message||'Could not delete income','err');});
+          return;
+        }
+        var editHeld = e.target.closest('[data-edit-held]');
+        if (editHeld) { openHeldEdit(editHeld.getAttribute('data-edit-held')); return; }
+        var editTransfer = e.target.closest('[data-edit-transfer]');
+        if (editTransfer) { openTransferEdit(editTransfer.getAttribute('data-edit-transfer')); return; }
+        var deleteTransfer = e.target.closest('[data-delete-transfer]');
+        if (deleteTransfer) {
+          api('deleteTransfer',deleteTransfer.getAttribute('data-delete-transfer')).then(function(res){if(res.accounts)S.accounts=res.accounts;applySummary(S.summary);snack('Transfer deleted. Account balances restored.');renderTransferTool();}).catch(function(err){snack(err.message||'Could not delete transfer','err');});
+          return;
+        }
+        var deleteBudget = e.target.closest('[data-delete-budget]');
+        if (deleteBudget) {
+          api('deleteBudget',{year:S.toolYear,monthNo:S.toolMonthNo,category:deleteBudget.getAttribute('data-delete-budget')}).then(function(){snack('Budget deleted');renderBudgetTool();}).catch(function(err){snack(err.message||'Could not delete budget','err');});
+          return;
+        }
         var deleteHeld = e.target.closest('[data-delete-held]');
         if (deleteHeld) {
           var hid = deleteHeld.getAttribute('data-delete-held');
-          api('deleteHeldMoney', hid).then(function(){snack('Held money removed');renderHeldTool();}).catch(function(err){snack(err.message||'Could not remove held money','err');});
+          api('deleteHeldMoney', hid).then(function(res){if(res.accounts)S.accounts=res.accounts;if(res.summary)applySummary(res.summary);snack('Held money returned/removed. Account balance updated.');renderHeldTool();}).catch(function(err){snack(err.message||'Could not remove held money','err');});
           return;
         }
         var saveAccount = e.target.closest('[data-save-account]');
         if (saveAccount) {
           var an = saveAccount.getAttribute('data-save-account');
           var ai = document.querySelector('[data-acct-name="' + cssEscape(an) + '"]');
-          api('saveAccount',{name:an,type:(function(){var x=(S.accounts||[]).find(function(a){return a.name===an;});return x?x.type:'Other';})(),opening:Number(ai?ai.value:0),active:true}).then(function(res){S.accounts=res.accounts||S.accounts;snack('Account updated');renderAccountsTool();}).catch(function(err){snack(err.message||'Could not update account','err');});
+          api('saveAccount',{name:an,type:(function(){var x=(S.accounts||[]).find(function(a){return a.name===an;});return x?x.type:'Other';})(),opening:Number(ai?ai.value:0),active:true}).then(function(res){S.accounts=res.accounts||S.accounts;applySummary(S.summary);snack('Account starting balance updated');renderAccountsTool();}).catch(function(err){snack(err.message||'Could not update account','err');});
           return;
         }
       });
@@ -3053,6 +3130,7 @@ function periodLabel(monthNo, year) {
         api('addExpense', payload)
           .then(function (res) {
             var savedId = res.id || null;
+            if (res.accounts) S.accounts = res.accounts;
 
             applySummary(res.summary);
             if (res.budgetWarning) {
