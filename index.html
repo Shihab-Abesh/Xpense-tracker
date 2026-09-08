@@ -1461,6 +1461,43 @@
 
     .queue.on{ display:block; }
 
+
+    /* ───────────── EXTENDED FINANCE TOOLS ───────────── */
+    .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;}
+    .compact-select{min-height:48px;appearance:none;-webkit-appearance:none;padding-right:34px;background-image:linear-gradient(45deg,transparent 50%,rgba(255,255,255,.42) 50%),linear-gradient(135deg,rgba(255,255,255,.42) 50%,transparent 50%);background-position:calc(100% - 16px) 21px,calc(100% - 11px) 21px;background-size:5px 5px,5px 5px;background-repeat:no-repeat;}
+    .tag-input{margin-bottom:16px;}
+    .tool-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;padding-bottom:8px;}
+    .tool-btn{min-height:58px;border-radius:16px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.05);color:#fff;font-size:12.5px;font-weight:750;text-align:left;padding:11px 12px;transition:transform .12s ease,background .2s ease,border-color .2s ease;}
+    .tool-btn:active{transform:scale(.97);background:rgba(255,255,255,.10);}
+    .tool-btn small{display:block;margin-top:4px;color:rgba(255,255,255,.30);font-size:10px;font-weight:500;}
+    .tool-headline{margin:4px 0 12px;font-size:15px;font-weight:850;}
+    .tool-month-nav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;padding:9px 10px;border:1px solid rgba(255,255,255,.09);border-radius:15px;background:rgba(255,255,255,.04);}
+    .tool-month-nav button{width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.06);color:#fff;font-size:18px;}
+    .tool-month-nav span{font-size:14px;font-weight:800;}
+    .tool-row{padding:11px 12px;border-radius:15px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.035);margin-bottom:8px;}
+    .tool-row-head{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+    .tool-row-title{font-size:12.5px;font-weight:800;}
+    .tool-row-sub{margin-top:4px;color:rgba(255,255,255,.33);font-size:10.5px;}
+    .tool-row-actions{display:flex;align-items:center;gap:7px;margin-top:9px;}
+    .tool-input{width:100%;min-height:42px;padding:9px 11px;border-radius:12px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.05);color:#fff;outline:none;}
+    .tool-save{min-height:42px;padding:9px 13px;border-radius:12px;background:linear-gradient(135deg,var(--income),#7EE8DF);color:#06251f;font-size:12px;font-weight:850;}
+    .tool-danger{min-height:42px;padding:9px 13px;border-radius:12px;background:rgba(248,113,113,.10);color:#FCA5A5;font-size:12px;font-weight:800;}
+    .report-card{padding:13px;border-radius:16px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);margin-bottom:9px;}
+    .report-big{font-size:22px;font-weight:900;letter-spacing:-.03em;}
+    .report-muted{margin-top:4px;color:rgba(255,255,255,.33);font-size:11px;line-height:1.4;}
+    .report-positive{color:#34D399}.report-negative{color:#F87171}.report-warning{color:#FBBF24}
+    .tool-kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px;}
+    .tool-kpi{padding:11px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);}
+    .tool-kpi .k{color:rgba(255,255,255,.30);font-size:8.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;}
+    .tool-kpi .v{margin-top:5px;font-size:16px;font-weight:850;}
+    .edit-mini{min-width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,.05);color:rgba(255,255,255,.64);font-size:13px;}
+    .hist-saved{color:#34D399;font-size:11px;font-weight:800;}
+    .progress-mini{height:6px;border-radius:50px;background:rgba(255,255,255,.07);overflow:hidden;margin-top:8px;}
+    .progress-mini > div{height:100%;border-radius:50px;background:linear-gradient(90deg,#10B981,#34D399);}
+    .budget-warning{margin-top:7px;font-size:10.5px;font-weight:700;}
+    .tool-select{width:100%;min-height:44px;margin-bottom:9px;}
+    @media (max-width:360px){.field-grid,.tool-grid,.tool-kpis{grid-template-columns:1fr 1fr;gap:7px}.tool-btn{min-height:54px;padding:10px}.tool-row{padding:10px}.tool-row-actions{gap:6px}.tool-save,.tool-danger{padding:8px 10px}}
+
     @media (max-width:360px){
       .wrap{
         padding-left:11px;
@@ -1629,6 +1666,7 @@
           <div class="balance-actions">
             <button class="mini-btn" id="btnSalary" type="button">💰 Salary</button>
             <button class="mini-btn" id="btnHistory" type="button">📅 History</button>
+            <button class="mini-btn" id="btnTools" type="button">🧰 Tools</button>
           </div>
         </div>
 
@@ -1675,6 +1713,17 @@
           autocomplete="off"
           maxlength="200"
         >
+      </div>
+
+      <p class="section-label">PAYMENT / ACCOUNT</p>
+      <div class="field-grid">
+        <select class="details compact-select" id="paymentMethod" aria-label="Payment method"></select>
+        <select class="details compact-select" id="expenseAccount" aria-label="Expense account"></select>
+      </div>
+
+      <p class="section-label">TAGS</p>
+      <div class="details-wrap tag-input">
+        <input class="details" type="text" id="tags" placeholder="#office, #family, #friends…" autocomplete="off" maxlength="250">
       </div>
 
       <p class="section-label">DATE</p>
@@ -1734,10 +1783,8 @@
           <button class="month-nav-btn" id="salNext" type="button" aria-label="Next month">›</button>
         </div>
 
-        <div class="source-tabs">
-          <button class="source-tab active" id="srcSalary" type="button">💼 Salary</button>
-          <button class="source-tab" id="srcExtra" type="button">🎁 Extra income</button>
-        </div>
+        <p class="field-label">Income type</p>
+        <select class="details compact-select tool-select" id="incomeSource" aria-label="Income type"></select>
 
         <p class="field-label" id="salFieldLabel">Salary received this month</p>
         <div class="money-input-wrap">
@@ -1752,6 +1799,9 @@
             maxlength="12"
           >
         </div>
+
+        <p class="field-label">Account receiving this money</p>
+        <select class="details compact-select tool-select" id="incomeAccount" aria-label="Income account"></select>
 
         <div class="sheet-stats">
           <div class="sheet-stat">
@@ -1785,6 +1835,55 @@
       </div>
       <div class="sheet-body">
         <div class="hist-list" id="histList"></div>
+      </div>
+    </div>
+
+    <!-- ───── Edit expense sheet ───── -->
+    <div class="scrim" id="editScrim"></div>
+    <div class="sheet" id="editSheet" role="dialog" aria-modal="true" aria-labelledby="editTitle">
+      <div class="sheet-grip"></div>
+      <div class="sheet-head">
+        <h3 class="sheet-title" id="editTitle">Edit expense</h3>
+        <button class="sheet-close" id="editClose" type="button" aria-label="Close">✕</button>
+      </div>
+      <div class="sheet-body">
+        <input class="money-input" id="editAmount" type="text" inputmode="decimal" placeholder="Amount" autocomplete="off" maxlength="12" style="width:100%;padding:12px 15px;border:1px solid rgba(255,255,255,.10);border-radius:15px;background:rgba(255,255,255,.05);margin-bottom:12px;">
+        <select class="details compact-select tool-select" id="editCategory"></select>
+        <input class="details" id="editWhere" type="text" placeholder="Where / details" maxlength="200" style="margin-bottom:10px;">
+        <div class="field-grid">
+          <select class="details compact-select" id="editPayment"></select>
+          <select class="details compact-select" id="editAccount"></select>
+        </div>
+        <input class="details" id="editTags" type="text" placeholder="#office, #family" maxlength="250" style="margin-bottom:10px;">
+        <input class="details" id="editDate" type="date" style="margin-bottom:13px;">
+        <button class="sheet-save" id="editSave" type="button">Save changes</button>
+      </div>
+    </div>
+
+    <!-- ───── Tools sheet ───── -->
+    <div class="scrim" id="toolsScrim"></div>
+    <div class="sheet" id="toolsSheet" role="dialog" aria-modal="true" aria-labelledby="toolsTitle">
+      <div class="sheet-grip"></div>
+      <div class="sheet-head">
+        <h3 class="sheet-title" id="toolsTitle">XPENSE tools</h3>
+        <button class="sheet-close" id="toolsClose" type="button" aria-label="Close">✕</button>
+      </div>
+      <div class="sheet-body">
+        <div id="toolsHome">
+          <div class="tool-grid">
+            <button class="tool-btn" data-tool="budget" type="button">🎯 Budgets<small>Category limits & alerts</small></button>
+            <button class="tool-btn" data-tool="savings" type="button">💚 Savings<small>Monthly + cumulative</small></button>
+            <button class="tool-btn" data-tool="insights" type="button">📊 Insights<small>Where the money went</small></button>
+            <button class="tool-btn" data-tool="compare" type="button">↕ Compare<small>Month vs previous</small></button>
+            <button class="tool-btn" data-tool="category" type="button">🔎 Category<small>Food, Car, Bills…</small></button>
+            <button class="tool-btn" data-tool="accounts" type="button">💳 Accounts<small>Cash, bKash, Bank…</small></button>
+            <button class="tool-btn" data-tool="held" type="button">👥 Money held<small>Other people's money</small></button>
+            <button class="tool-btn" data-tool="transfer" type="button">↔ Transfer<small>Move money between accounts</small></button>
+            <button class="tool-btn" data-tool="closing" type="button">📘 Month close<small>Close and snapshot a month</small></button>
+            <button class="tool-btn" data-tool="export" type="button">📤 Export<small>CSV, JSON, Excel, Print/PDF</small></button>
+          </div>
+        </div>
+        <div id="toolsPanel" hidden></div>
       </div>
     </div>
 
@@ -1839,7 +1938,11 @@
         salMonthNo: null,
         salSource: 'Salary',
         salDetail: null,
-        sheetOpen: null
+        sheetOpen: null,
+        editId: null,
+        toolYear: null,
+        toolMonthNo: null,
+        toolData: null
       };
 
       var QKEY = 'exp_queue_v2';
@@ -1960,6 +2063,48 @@ function periodLabel(monthNo, year) {
 
       function money(n) {
         return '৳' + num(n);
+      }
+
+      function populateSelect(id, items, placeholder) {
+        var el = $(id);
+        if (!el) return;
+        el.innerHTML = '';
+        if (placeholder) {
+          var p = document.createElement('option');
+          p.value = '';
+          p.textContent = placeholder;
+          el.appendChild(p);
+        }
+        (items || []).forEach(function (item) {
+          var value = typeof item === 'string' ? item : item.name;
+          if (value === undefined || value === null) return;
+          var o = document.createElement('option');
+          o.value = value;
+          o.textContent = value;
+          el.appendChild(o);
+        });
+      }
+
+      function currentMonthPair() {
+        var d = new Date();
+        return { year: d.getFullYear(), monthNo: d.getMonth() + 1 };
+      }
+
+      function setToolMonth(y, m) {
+        S.toolYear = y;
+        S.toolMonthNo = m;
+      }
+
+      function shiftToolMonth(delta) {
+        var y = S.toolYear, m = S.toolMonthNo + delta;
+        while (m < 1) { m += 12; y--; }
+        while (m > 12) { m -= 12; y++; }
+        setToolMonth(y, m);
+      }
+
+      function accountNames(includeBlank) {
+        var arr = (S.accounts || []).map(function (a) { return a.name; });
+        return includeBlank ? [''].concat(arr) : arr;
       }
 
       function ymd(d) {
@@ -2297,6 +2442,13 @@ function periodLabel(monthNo, year) {
           amt.className = 'recent-amount';
           amt.textContent = money(r.amount);
 
+          var edit = document.createElement('button');
+          edit.className = 'edit-mini';
+          edit.type = 'button';
+          edit.title = 'Edit expense';
+          edit.textContent = '✎';
+          edit.onclick = function () { openEdit(r); };
+
           var del = document.createElement('button');
           del.className = 'recent-delete';
           del.type = 'button';
@@ -2305,6 +2457,7 @@ function periodLabel(monthNo, year) {
           del.onclick = function () { removeEntry(r.id); };
 
           right.appendChild(amt);
+          right.appendChild(edit);
           right.appendChild(del);
           row.appendChild(left);
           row.appendChild(right);
@@ -2377,9 +2530,10 @@ function periodLabel(monthNo, year) {
       }
 
       function closeSheet() {
-        ['sal', 'hist'].forEach(function (n) {
-          $(n + 'Scrim').classList.remove('on');
-          $(n + 'Sheet').classList.remove('on');
+        ['sal', 'hist', 'edit', 'tools'].forEach(function (n) {
+          var scrim = $(n + 'Scrim'), sheet = $(n + 'Sheet');
+          if (scrim) scrim.classList.remove('on');
+          if (sheet) sheet.classList.remove('on');
         });
         S.sheetOpen = null;
         document.body.classList.remove('locked');
@@ -2413,18 +2567,15 @@ function periodLabel(monthNo, year) {
 
       function setSalarySource(src) {
         S.salSource = src;
-        $('srcSalary').classList.toggle('active', src === 'Salary');
-        $('srcExtra').classList.toggle('active', src === 'Extra');
-        $('salFieldLabel').textContent = (src === 'Salary')
-          ? 'Salary received this month'
-          : 'Other money received this month';
+        if ($('incomeSource')) $('incomeSource').value = src;
+        $('salFieldLabel').textContent = src === 'Salary' ? 'Salary received this month' : src + ' received this month';
         fillSalaryInput();
         updateSalaryPreview();
       }
 
       function currentSourceAmount() {
         if (!S.salDetail) return 0;
-        return Number(S.salSource === 'Salary' ? S.salDetail.salary : S.salDetail.extra) || 0;
+        return Number((S.salDetail.sources || {})[S.salSource] || 0);
       }
 
       function fillSalaryInput() {
@@ -2449,6 +2600,7 @@ function periodLabel(monthNo, year) {
         api('getMonthDetail', { year: S.salYear, monthNo: S.salMonthNo })
           .then(function (d) {
             S.salDetail = d;
+            if ($('incomeAccount')) $('incomeAccount').value = (d.sourceAccounts && d.sourceAccounts[S.salSource]) || accountNames(false)[0] || '';
             fillSalaryInput();
             $('salSpent').textContent = money(d.spent);
             updateSalaryPreview();
@@ -2470,39 +2622,34 @@ function periodLabel(monthNo, year) {
 
       function updateSalaryPreview() {
         if (!S.salDetail) return;
-
-        // Everything the month already has, minus the figure being edited,
-        // so the preview never double counts what is in the box.
         var typed = readSalaryInput();
         var otherIncome = Math.max(0, (S.salDetail.income || 0) - currentSourceAmount());
         var left = typed + otherIncome - (S.salDetail.spent || 0);
-
         $('salLeft').textContent = money(left);
         $('salLeft').style.color = left < 0 ? 'var(--danger)' : 'var(--green)';
       }
 
       function saveSalary(amountOverride) {
         var amount = (amountOverride !== undefined) ? amountOverride : readSalaryInput();
-        var label = (S.salSource === 'Salary' ? 'Salary' : 'Extra income') +
-                    ' for ' + periodLabel(S.salMonthNo, S.salYear);
+        var label = S.salSource + ' for ' + periodLabel(S.salMonthNo, S.salYear);
 
         $('salSave').disabled = true;
         $('salSave').textContent = 'Saving…';
 
-        api('setSalary', {
+        api('setIncome', {
           year: S.salYear,
           monthNo: S.salMonthNo,
           amount: amount,
-          source: S.salSource
+          source: S.salSource,
+          account: $('incomeAccount').value || '',
+          notes: ''
         })
           .then(function (res) {
             S.salDetail = res.month;
             S.history = res.history || S.history;
             applySummary(res.summary);
-
             $('salSave').disabled = false;
             $('salSave').textContent = 'Save';
-
             closeSheet();
             snack(amount > 0 ? label + ' set to ' + money(amount) : label + ' removed');
           })
@@ -2607,6 +2754,11 @@ function periodLabel(monthNo, year) {
           nums.appendChild(inSpan);
           nums.appendChild(outSpan);
 
+          var savedSpan = document.createElement('span');
+          savedSpan.className = 'hist-saved';
+          savedSpan.textContent = 'Saved ' + money(r.saved || 0);
+          nums.appendChild(savedSpan);
+
           item.appendChild(top);
           item.appendChild(bar);
           item.appendChild(nums);
@@ -2623,11 +2775,260 @@ function periodLabel(monthNo, year) {
         });
       }
 
+      /* ───────── tools / reports ───────── */
+
+      function openTools() {
+        var cm = currentMonthPair();
+        setToolMonth(cm.year, cm.monthNo);
+        openSheet('tools');
+        $('toolsHome').hidden = false;
+        $('toolsPanel').hidden = true;
+        $('toolsPanel').innerHTML = '';
+      }
+
+      function closeToolPanel() {
+        $('toolsHome').hidden = false;
+        $('toolsPanel').hidden = true;
+        $('toolsPanel').innerHTML = '';
+      }
+
+      function toolShell(title, html) {
+        $('toolsHome').hidden = true;
+        $('toolsPanel').hidden = false;
+        $('toolsPanel').innerHTML = '<div class="tool-headline">' + title + '</div>' + html;
+      }
+
+      function toolMonthNav() {
+        return '<div class="tool-month-nav"><button type="button" data-tool-month="-1">‹</button><span>' + periodLabel(S.toolMonthNo, S.toolYear) + '</span><button type="button" data-tool-month="1">›</button></div>';
+      }
+
+      function renderBudgetTool() {
+        api('getBudgetSummary', {year:S.toolYear, monthNo:S.toolMonthNo}).then(function(list){
+          var html=toolMonthNav();
+          html += '<div class="report-muted" style="margin-bottom:10px">Set a limit per category. 80% = warning, 90% = high, 100%+ = over budget.</div>';
+          (list||[]).forEach(function(r){
+            var pct=Math.max(0,r.percent||0), color=pct>=100?'report-negative':pct>=90?'report-warning':pct>=80?'report-warning':'report-positive';
+            html += '<div class="tool-row"><div class="tool-row-head"><span class="tool-row-title">'+escapeHtml(r.category)+'</span><span class="'+color+'">'+(r.budget?Math.round(pct)+'%':'No budget')+'</span></div>';
+            html += '<div class="tool-row-sub">Spent '+money(r.spent)+(r.budget?' · Budget '+money(r.budget)+' · Left '+money(r.left):'')+'</div>';
+            if(r.budget) html += '<div class="progress-mini"><div style="width:'+Math.min(100,pct)+'%"></div></div>';
+            if(r.budget && pct>=80) html += '<div class="budget-warning '+color+'">'+(pct>=100?'Over budget':pct>=90?'90%+ used':'80%+ used')+'</div>';
+            html += '<div class="tool-row-actions"><input class="tool-input" data-budget-cat="'+escapeAttr(r.category)+'" value="'+(r.budget||'')+'" inputmode="decimal" placeholder="Monthly budget"><button class="tool-save" data-save-budget="'+escapeAttr(r.category)+'">Save</button></div></div>';
+          });
+          toolShell('Monthly budgets',html);
+        }).catch(showToolError);
+      }
+
+      function renderSavingsTool() {
+        api('getSavingsSummary',{year:S.toolYear,monthNo:S.toolMonthNo}).then(function(d){
+          var html=toolMonthNav();
+          html += '<div class="tool-kpis"><div class="tool-kpi"><div class="k">This month saved</div><div class="v report-positive">'+money(d.currentSaved)+'</div></div><div class="tool-kpi"><div class="k">Total saved</div><div class="v report-positive">'+money(d.totalSaved)+'</div></div></div>';
+          html += '<div class="report-card"><div class="report-big">'+money(d.currentIncome-d.currentSpent)+'</div><div class="report-muted">'+periodLabel(S.toolMonthNo,S.toolYear)+' = income minus expenses. Cumulative savings adds each month’s result.</div></div>';
+          (d.history||[]).forEach(function(r){ html += '<div class="tool-row"><div class="tool-row-head"><span class="tool-row-title">'+escapeHtml(r.period)+'</span><span class="hist-saved">'+money(r.saved||0)+'</span></div><div class="tool-row-sub">Income '+money(r.income)+' · Spent '+money(r.spent)+' · Total saved to date '+money(r.cumulativeSaved||0)+'</div></div>'; });
+          toolShell('Savings',html);
+        }).catch(showToolError);
+      }
+
+      function renderInsightsTool() {
+        api('getInsights',{year:S.toolYear,monthNo:S.toolMonthNo}).then(function(d){
+          var html=toolMonthNav();
+          html += '<div class="tool-kpis">';
+          html += '<div class="tool-kpi"><div class="k">Biggest category</div><div class="v">'+(d.biggestCategory?escapeHtml(d.biggestCategory.category)+' · '+money(d.biggestCategory.total):'—')+'</div></div>';
+          html += '<div class="tool-kpi"><div class="k">Largest expense</div><div class="v">'+(d.largestExpense?money(d.largestExpense.amount):'—')+'</div></div>';
+          html += '<div class="tool-kpi"><div class="k">Highest weekday</div><div class="v">'+(d.highestDay?escapeHtml(d.highestDay.day)+' · '+money(d.highestDay.amount):'—')+'</div></div>';
+          html += '<div class="tool-kpi"><div class="k">Over ৳2,000</div><div class="v">'+d.over2000Count+'</div></div></div>';
+          if(d.largestExpense) html += '<div class="report-card"><div class="report-big">'+money(d.largestExpense.amount)+'</div><div class="report-muted">Largest expense: '+escapeHtml(d.largestExpense.where||d.largestExpense.category)+' · '+escapeHtml(d.largestExpense.date||'')+'</div></div>';
+          html += '<div class="report-card"><div class="tool-headline" style="margin-bottom:8px">Where your money went</div>';
+          (d.categoryTotals||[]).forEach(function(c){var pct=d.totalSpent?c.total/d.totalSpent*100:0;html+='<div class="tool-row-sub" style="display:flex;justify-content:space-between;gap:8px;margin:8px 0 3px"><span>'+escapeHtml(c.category)+'</span><span>'+money(c.total)+' · '+pct.toFixed(1)+'%</span></div><div class="progress-mini"><div style="width:'+Math.min(100,pct)+'%"></div></div>';});
+          html+='</div>';
+          html += '<div class="report-card"><div class="tool-headline" style="margin-bottom:8px">Category changes vs previous month</div>';
+          (d.categoryChanges||[]).slice(0,8).forEach(function(c){var cls=c.change<0?'report-positive':c.change>0?'report-negative':'report-muted'; html+='<div class="tool-row-sub" style="display:flex;justify-content:space-between;gap:8px;margin:7px 0"><span>'+escapeHtml(c.category)+'</span><span class="'+cls+'">'+(c.change>0?'+':'')+c.change.toFixed(1)+'%</span></div>';});
+          html+='</div>';
+          html += '<div class="report-card"><div class="tool-headline" style="margin-bottom:8px">Payment methods</div>';
+          Object.keys(d.paymentTotals||{}).forEach(function(k){html+='<div class="tool-row-sub" style="display:flex;justify-content:space-between;gap:8px;margin:7px 0"><span>'+escapeHtml(k)+'</span><span>'+money(d.paymentTotals[k])+'</span></div>';});
+          html+='</div>';
+          toolShell('Spending insights',html);
+        }).catch(showToolError);
+      }
+
+      function renderCompareTool() {
+        api('getMonthlyComparison',{year:S.toolYear,monthNo:S.toolMonthNo}).then(function(d){
+          var html=toolMonthNav();
+          html += '<div class="report-muted" style="margin-bottom:10px">'+escapeHtml(periodLabel(d.current.monthNo,d.current.year))+' compared with '+escapeHtml(periodLabel(d.previous.monthNo,d.previous.year))+'</div>';
+          [['Income',d.current.income,d.previous.income,d.incomeChange],['Spent',d.current.spent,d.previous.spent,d.spentChange],['Saved',d.current.saved,d.previous.saved,d.savedChange]].forEach(function(x){var cls=x[3]<0?'report-positive':x[3]>0?'report-negative':'report-muted'; if(x[0]==='Saved') cls=x[3]>=0?'report-positive':'report-negative'; html+='<div class="report-card"><div class="report-big">'+x[0]+': '+money(x[1])+'</div><div class="report-muted">Previous '+money(x[2])+' · <span class="'+cls+'">'+(x[3]>0?'+':'')+x[3].toFixed(1)+'%</span></div></div>';});
+          toolShell('Monthly comparison',html);
+        }).catch(showToolError);
+      }
+
+      function renderCategoryTool() {
+        var html='<select id="catToolSelect" class="details compact-select tool-select">';
+        (S.categories||[]).forEach(function(c){html+='<option value="'+escapeAttr(c)+'">'+escapeHtml(c)+'</option>';}); html+='</select>';
+        html+=toolMonthNav()+'<div id="categoryResult"></div>';
+        toolShell('Category spending',html);
+        $('catToolSelect').onchange=loadCategoryToolResult;
+        loadCategoryToolResult();
+      }
+
+      function loadCategoryToolResult(){var cat=$('catToolSelect').value;api('getCategorySpending',{year:S.toolYear,monthNo:S.toolMonthNo,category:cat}).then(function(d){$('categoryResult').innerHTML='<div class="report-card"><div class="report-big">'+money(d.total)+'</div><div class="report-muted">Spent on '+escapeHtml(d.category)+' during '+escapeHtml(d.month+' '+d.year)+' · '+d.count+' entries</div></div>';}).catch(showToolError);}
+
+      function renderAccountsTool(){
+        api('getAccountBalances').then(function(list){
+          S.accounts=list||[];
+          var html='<div class="report-muted" style="margin-bottom:10px">Gross balance is the money physically in the account. Money held for others is shown separately and is not your own money.</div>';
+          (list||[]).forEach(function(a){
+            html+='<div class="tool-row"><div class="tool-row-head"><span class="tool-row-title">'+escapeHtml(a.name)+'</span><span class="report-positive">'+money(a.balance)+'</span></div>';
+            html+='<div class="tool-row-sub">'+escapeHtml(a.type)+' · Own '+money(a.ownBalance||0)+' · Held for others '+money(a.held||0)+'</div>';
+            html+='<div class="tool-row-actions"><input class="tool-input" data-acct-name="'+escapeAttr(a.name)+'" value="'+a.opening+'" inputmode="decimal"><button class="tool-save" data-save-account="'+escapeAttr(a.name)+'">Update</button></div></div>';
+          });
+          html+='<div class="report-card"><div class="tool-headline">Add / replace account</div><input class="details" id="newAccountName" placeholder="Account name" style="margin-bottom:8px"><select class="details compact-select tool-select" id="newAccountType"><option>Cash</option><option>Mobile wallet</option><option>Bank</option><option>Card</option><option>Other</option></select><input class="details" id="newAccountOpening" inputmode="decimal" placeholder="Opening balance" style="margin-bottom:8px"><button class="tool-save" id="saveNewAccount" type="button">Save account</button></div>';
+          toolShell('Accounts',html);
+        }).catch(showToolError);
+      }
+
+      function renderHeldTool(){
+        api('getHeldMoney',{limit:100}).then(function(list){
+          api('getHeldSummary').then(function(sum){
+            var opts=accountNames(false).map(function(a){return '<option value="'+escapeAttr(a)+'">'+escapeHtml(a)+'</option>';}).join('');
+            var html='<div class="report-card"><div class="report-big">'+money(sum.total||0)+'</div><div class="report-muted">Currently held for other people. This is excluded from your income, spending, savings and own-money total.</div></div>';
+            html+='<div class="report-muted" style="margin-bottom:10px">Add money that belongs to someone else but is currently sitting in your Cash, Bank, bKash, or another account.</div>';
+            html+='<input class="details" id="heldOwner" placeholder="Whose money? e.g. Rahim" style="margin-bottom:8px">';
+            html+='<input class="details" id="heldPurpose" placeholder="Purpose / what it is for" style="margin-bottom:8px">';
+            html+='<input class="details" id="heldAmount" inputmode="decimal" placeholder="Amount" style="margin-bottom:8px">';
+            html+='<select class="details compact-select tool-select" id="heldAccount">'+opts+'</select>';
+            html+='<input class="details" id="heldNotes" placeholder="Short note (optional)" style="margin:8px 0">';
+            html+='<button class="tool-save" id="saveHeld" type="button">Add held money</button>';
+            html+='<div class="report-card" style="margin-top:12px"><div class="tool-headline">Currently held</div>';
+            html+=(list||[]).map(function(r){return '<div class="tool-row"><div class="tool-row-head"><span class="tool-row-title">'+escapeHtml(r.owner)+' · '+escapeHtml(r.purpose)+'</span><span class="report-warning">'+money(r.amount)+'</span></div><div class="tool-row-sub">'+escapeHtml(r.account)+' · '+escapeHtml(r.date)+(r.notes?' · '+escapeHtml(r.notes):'')+'</div><div class="tool-row-actions"><button class="tool-save" data-delete-held="'+escapeAttr(r.id)+'">Returned / remove</button></div></div>';}).join('')||'<div class="report-muted">No money is currently marked as held for others.</div>';
+            html+='</div>';
+            toolShell('Money held for others',html);
+            $('saveHeld').onclick=function(){api('addHeldMoney',{amount:Number($('heldAmount').value),owner:$('heldOwner').value.trim(),purpose:$('heldPurpose').value.trim(),account:$('heldAccount').value||'',notes:$('heldNotes').value.trim(),date:S.today}).then(function(){snack('Held money added');renderHeldTool();}).catch(function(e){snack(e.message||'Could not add held money','err');});};
+          }).catch(showToolError);
+        }).catch(showToolError);
+      }
+
+      function renderTransferTool(){
+        api('getAccountBalances').then(function(list){
+          S.accounts=list||[];
+          var opts=(list||[]).map(function(a){return '<option value="'+escapeAttr(a.name)+'">'+escapeHtml(a.name)+'</option>';}).join('');
+          var html='<div class="report-muted" style="margin-bottom:10px">Transfers move money between accounts. They do not count as income or expense.</div><select class="details compact-select tool-select" id="transferFrom">'+opts+'</select><select class="details compact-select tool-select" id="transferTo">'+opts+'</select><input class="details" id="transferAmount" inputmode="decimal" placeholder="Amount" style="margin-bottom:8px"><input class="details" id="transferNote" placeholder="Note (optional)" style="margin-bottom:8px"><button class="tool-save" id="saveTransfer" type="button">Transfer</button><div id="transferList" style="margin-top:12px"></div>';
+          toolShell('Transfer money',html);
+          loadTransfers();
+          $('saveTransfer').onclick=function(){api('addTransfer',{from:$('transferFrom').value,to:$('transferTo').value,amount:Number($('transferAmount').value),date:ymd(new Date()),note:$('transferNote').value.trim()}).then(function(){snack('Transfer saved');renderTransferTool();}).catch(function(e){snack(e.message||'Could not transfer','err');});};
+        }).catch(showToolError);
+      }
+
+      function loadTransfers(){api('getTransfers',{limit:25}).then(function(list){var b=$('transferList');if(!b)return;b.innerHTML=(list||[]).map(function(r){return '<div class="tool-row"><div class="tool-row-head"><span class="tool-row-title">'+escapeHtml(r.from)+' → '+escapeHtml(r.to)+'</span><span class="report-positive">'+money(r.amount)+'</span></div><div class="tool-row-sub">'+escapeHtml(r.date)+(r.note?' · '+escapeHtml(r.note):'')+'</div></div>';}).join('')||'<div class="report-muted">No transfers yet.</div>';});}
+
+      function renderClosingTool(){
+        api('getMonthClosing',{year:S.toolYear,monthNo:S.toolMonthNo}).then(function(d){var html=toolMonthNav();html+='<div class="tool-kpis"><div class="tool-kpi"><div class="k">Income</div><div class="v">'+money(d.income)+'</div></div><div class="tool-kpi"><div class="k">Expenses</div><div class="v">'+money(d.spent)+'</div></div><div class="tool-kpi"><div class="k">Saved</div><div class="v report-positive">'+money(d.saved)+'</div></div><div class="tool-kpi"><div class="k">Savings rate</div><div class="v">'+d.savingsRate.toFixed(1)+'%</div></div></div><div class="report-card"><div class="report-big">Carry in '+money(d.carryIn)+'</div><div class="report-muted">Carry out '+money(d.carryOut)+'</div></div><button class="tool-save" id="closeMonthBtn" type="button">Close / snapshot this month</button>' ;toolShell('Month closing',html);$('closeMonthBtn').onclick=function(){api('closeMonth',{year:S.toolYear,monthNo:S.toolMonthNo}).then(function(){snack('Month snapshot saved');}).catch(function(e){snack(e.message||'Could not close month','err');});};}).catch(showToolError);
+      }
+
+      function renderExportTool(){
+        var html='<div class="report-muted" style="margin-bottom:10px">Export the current workbook or create a printable monthly summary.</div><div class="tool-grid"><button class="tool-btn" id="exportCsv" type="button">📄 CSV<small>Expenses + income</small></button><button class="tool-btn" id="exportJson" type="button">🗃 JSON<small>Full backup bundle</small></button><button class="tool-btn" id="exportExcel" type="button">📊 Excel<small>Save a copy to Drive</small></button><button class="tool-btn" id="exportPrint" type="button">🖨 Print / PDF<small>Print the selected month</small></button></div>';
+        toolShell('Export & backup',html);
+        $('exportCsv').onclick=exportCsv; $('exportJson').onclick=exportJson; $('exportExcel').onclick=function(){api('exportToExcel').then(function(url){snack('Excel copy created'); if(url) window.open(url,'_blank');}).catch(function(){snack('Could not create Excel copy','err');});}; $('exportPrint').onclick=printMonthlyReport;
+      }
+
+      function showToolError(){snack('Could not load this report.','err');}
+      function escapeHtml(s){return String(s==null?'':s).replace(/[&<>'"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','\"':'&quot;'}[c];});}
+      function escapeAttr(s){return escapeHtml(s).replace(/`/g,'&#96;');}
+
+      function openEdit(r){
+        S.editId=r.id; $('editAmount').value=r.amount||''; $('editCategory').value=r.category||S.categories[0]||''; $('editWhere').value=r.where||''; $('editPayment').value=r.paymentMethod||'Cash'; $('editAccount').value=r.account||''; $('editTags').value=r.tags||''; $('editDate').value=r.dateIso||S.today||ymd(new Date()); openSheet('edit');
+      }
+
+      function saveEdit(){
+        var payload={id:S.editId,amount:Number($('editAmount').value),category:$('editCategory').value,where:$('editWhere').value.trim(),paymentMethod:$('editPayment').value||'Cash',account:$('editAccount').value||'',tags:$('editTags').value.trim(),date:$('editDate').value};
+        api('updateExpense',payload).then(function(res){applySummary(res.summary);closeSheet();snack('Expense updated');if(res.budgetWarning)snack(res.budgetWarning.category+' budget is '+Math.round(res.budgetWarning.percent)+'% used.','warn');}).catch(function(e){snack(e.message||'Could not update','err');});
+      }
+
+      function exportCsv(){api('getExportBundle').then(function(b){var rows=[['Expenses'],['ID','Logged at','Date','Day','Month','Month no','Year','Amount','Category','Where','Payment method','Account','Tags']].concat(b.expenses||[]).concat([[],['Income'],['ID','Logged at','Date','Month','Month no','Year','Amount','Source','Account','Notes']]).concat(b.income||[]).concat([[],['Held Money'],['ID','Logged at','Date','Account','Amount','Whose money?','Purpose','Notes']]).concat(b.heldMoney||[]);var csv=rows.map(function(row){return row.map(function(x){var s=String(x==null?'':x);return '"'+s.replace(/"/g,'""')+'"';}).join(',');}).join('\n');downloadBlob(csv,'xpense-backup.csv','text/csv');}).catch(function(){snack('Could not export CSV','err');});}
+      function exportJson(){api('getExportBundle').then(function(b){downloadBlob(JSON.stringify(b,null,2),'xpense-backup.json','application/json');}).catch(function(){snack('Could not export JSON','err');});}
+      function downloadBlob(text,name,type){var blob=new Blob([text],{type:type});var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(a.href);},1000);}
+      function printMonthlyReport(){
+        api('getMonthlyComparison',{year:S.toolYear,monthNo:S.toolMonthNo}).then(function(cmp){
+          return api('getInsights',{year:S.toolYear,monthNo:S.toolMonthNo}).then(function(ins){
+            var w=window.open('','_blank');
+            if(!w){snack('Popup blocked. Allow popups for PDF/print.','warn');return;}
+            var title=periodLabel(S.toolMonthNo,S.toolYear);
+            var cat=(ins.categoryTotals||[]).map(function(x){return '<tr><td>'+escapeHtml(x.category)+'</td><td>'+money(x.total)+'</td></tr>';}).join('');
+            var html='<!doctype html><html><head><title>XPENSE '+escapeHtml(title)+'</title><style>body{font-family:Arial,sans-serif;padding:28px;color:#111}h1{margin-bottom:6px}table{border-collapse:collapse;width:100%;margin-top:18px}th,td{border:1px solid #ddd;padding:8px;text-align:left}.k{display:inline-block;margin:0 8px 8px 0;padding:10px;border:1px solid #ddd;border-radius:8px}.muted{color:#666}</style></head><body><h1>XPENSE · '+escapeHtml(title)+'</h1><div class="k">Income<br><b>'+money(cmp.current.income)+'</b></div><div class="k">Spent<br><b>'+money(cmp.current.spent)+'</b></div><div class="k">Saved<br><b>'+money(cmp.current.saved)+'</b></div><h2>Where the money went</h2><table><tr><th>Category</th><th>Spent</th></tr>'+cat+'</table><p class="muted">Generated by XPENSE</p></body></html>';
+            w.document.open();
+            w.document.write(html);
+            w.document.close();
+            setTimeout(function(){try{w.focus();w.print();}catch(e){}},400);
+          });
+        }).catch(function(){snack('Could not create the report.','err');});
+      }
+
+      function runTool(name){
+        if(name==='budget')renderBudgetTool();
+        else if(name==='savings')renderSavingsTool();
+        else if(name==='insights')renderInsightsTool();
+        else if(name==='compare')renderCompareTool();
+        else if(name==='category')renderCategoryTool();
+        else if(name==='accounts')renderAccountsTool();
+        else if(name==='held')renderHeldTool();
+        else if(name==='transfer')renderTransferTool();
+        else if(name==='closing')renderClosingTool();
+        else if(name==='export')renderExportTool();
+      }
+
+
+
+      document.addEventListener('click', function (e) {
+        var tool = e.target.closest('[data-tool]');
+        if (tool) { runTool(tool.getAttribute('data-tool')); return; }
+        var mn = e.target.closest('[data-tool-month]');
+        if (mn) {
+          shiftToolMonth(Number(mn.getAttribute('data-tool-month')) || 0);
+          var panel = $('toolsPanel');
+          if (panel && !panel.hidden) {
+            var title = panel.querySelector('.tool-headline');
+            if (title) {
+              var txt = title.textContent.toLowerCase();
+              if (txt.indexOf('budget') !== -1) renderBudgetTool();
+              else if (txt.indexOf('saving') !== -1) renderSavingsTool();
+              else if (txt.indexOf('insight') !== -1) renderInsightsTool();
+              else if (txt.indexOf('comparison') !== -1) renderCompareTool();
+              else if (txt.indexOf('category') !== -1) renderCategoryTool();
+              else if (txt.indexOf('closing') !== -1) renderClosingTool();
+            }
+          }
+          return;
+        }
+        var saveBudget = e.target.closest('[data-save-budget]');
+        if (saveBudget) {
+          var cat = saveBudget.getAttribute('data-save-budget');
+          var inp = document.querySelector('[data-budget-cat="' + cssEscape(cat) + '"]');
+          var value = inp ? Number(inp.value) : 0;
+          api('setBudget',{year:S.toolYear,monthNo:S.toolMonthNo,category:cat,budget:value}).then(function(){snack('Budget saved');renderBudgetTool();}).catch(function(err){snack(err.message||'Could not save budget','err');});
+          return;
+        }
+        var deleteHeld = e.target.closest('[data-delete-held]');
+        if (deleteHeld) {
+          var hid = deleteHeld.getAttribute('data-delete-held');
+          api('deleteHeldMoney', hid).then(function(){snack('Held money removed');renderHeldTool();}).catch(function(err){snack(err.message||'Could not remove held money','err');});
+          return;
+        }
+        var saveAccount = e.target.closest('[data-save-account]');
+        if (saveAccount) {
+          var an = saveAccount.getAttribute('data-save-account');
+          var ai = document.querySelector('[data-acct-name="' + cssEscape(an) + '"]');
+          api('saveAccount',{name:an,type:(function(){var x=(S.accounts||[]).find(function(a){return a.name===an;});return x?x.type:'Other';})(),opening:Number(ai?ai.value:0),active:true}).then(function(res){S.accounts=res.accounts||S.accounts;snack('Account updated');renderAccountsTool();}).catch(function(err){snack(err.message||'Could not update account','err');});
+          return;
+        }
+      });
+
+      function cssEscape(s) {
+        return String(s).replace(/(["\\])/g,'\\$1');
+      }
+
       /* ───────── save expense ───────── */
 
       function resetForm() {
         S.amount = '';
         $('where').value = '';
+        $('tags').value = '';
         setDate(S.today, 'dToday', 'Other');
         $('save').classList.remove('saving', 'saved');
         $('save').textContent = 'Save Expense';
@@ -2643,6 +3044,9 @@ function periodLabel(monthNo, year) {
           category: S.category,
           where: $('where').value.trim(),
           date: S.date,
+          paymentMethod: $('paymentMethod').value || 'Cash',
+          account: $('expenseAccount').value || '',
+          tags: $('tags').value.trim(),
           clientId: uid()
         };
 
@@ -2655,6 +3059,9 @@ function periodLabel(monthNo, year) {
             var savedId = res.id || null;
 
             applySummary(res.summary);
+            if (res.budgetWarning) {
+              snack(res.budgetWarning.category + ' budget is ' + Math.round(res.budgetWarning.percent) + '% used.', 'warn');
+            }
 
             $('save').classList.remove('saving');
             $('save').classList.add('saved');
@@ -2729,14 +3136,25 @@ function periodLabel(monthNo, year) {
         S.categories = b.categories || [];
         S.today = b.today;
         S.history = b.history || [];
+        S.accounts = b.accounts || [];
+        S.heldMoney = b.heldMoney || [];
+        S.heldSummary = b.heldSummary || {total:0,byAccount:[]};
+        S.paymentMethods = b.paymentMethods || ['Cash','Card','bKash','Nagad','Bank'];
+        S.incomeSources = b.incomeSources || ['Salary','Freelance','Bonus','Gift','Refund','Other','Extra'];
+
+        populateSelect('paymentMethod', S.paymentMethods);
+        populateSelect('expenseAccount', accountNames(true), 'No account');
+        populateSelect('incomeSource', S.incomeSources);
+        populateSelect('incomeAccount', accountNames(false));
+        populateSelect('editCategory', S.categories);
+        populateSelect('editPayment', S.paymentMethods);
+        populateSelect('editAccount', accountNames(true), 'No account');
 
         var last = store(CKEY);
+        if (last && S.categories.indexOf(last) > -1) S.category = last;
+        else if (S.categories.length) S.category = S.categories[0];
 
-        if (last && S.categories.indexOf(last) > -1) {
-          S.category = last;
-        } else if (S.categories.length) {
-          S.category = S.categories[0];
-        }
+        if ($('incomeSource')) $('incomeSource').onchange = function(){ setSalarySource(this.value); };
 
         renderCats();
         wireDates();
@@ -2747,18 +3165,22 @@ function periodLabel(monthNo, year) {
 
       function offlineFallback() {
         S.today = ymd(new Date());
-        S.categories = [
-          'Food','Transport','Groceries','Bills','Mobile/Internet',
-          'Health','Shopping','Fashion','Car','Other'
-        ];
-
+        S.categories = ['Food','Transport','Groceries','Bills','Mobile/Internet','Health','Shopping','Fashion','Car','Other'];
+        S.accounts = [];
+        S.paymentMethods = ['Cash','Card','bKash','Nagad','Bank'];
+        S.incomeSources = ['Salary','Freelance','Bonus','Gift','Refund','Other','Extra'];
+        populateSelect('paymentMethod', S.paymentMethods);
+        populateSelect('expenseAccount', [], 'No account');
+        populateSelect('incomeSource', S.incomeSources);
+        populateSelect('incomeAccount', [], 'No account');
+        populateSelect('editCategory', S.categories);
+        populateSelect('editPayment', S.paymentMethods);
+        populateSelect('editAccount', [], 'No account');
         var last = store(CKEY);
         S.category = (last && S.categories.indexOf(last) > -1) ? last : S.categories[0];
-
         renderCats();
         wireDates();
         renderAmount();
-
         snack('Could not reach the sheet. You can still enter an expense and it will queue locally.', 'warn');
       }
 
@@ -2769,31 +3191,35 @@ function periodLabel(monthNo, year) {
         });
 
         $('save').onclick = save;
-
         $('btnSalary').onclick = openSalary;
         $('btnHistory').onclick = openHistory;
+        $('btnTools').onclick = openTools;
 
         $('salClose').onclick = closeSheet;
         $('salScrim').onclick = closeSheet;
         $('histClose').onclick = closeSheet;
         $('histScrim').onclick = closeSheet;
+        $('editClose').onclick = closeSheet;
+        $('editScrim').onclick = closeSheet;
+        $('toolsClose').onclick = closeSheet;
+        $('toolsScrim').onclick = closeSheet;
+        $('editSave').onclick = saveEdit;
 
         $('salPrev').onclick = function () { shiftSalaryMonth(-1); };
         $('salNext').onclick = function () { shiftSalaryMonth(1); };
         $('salInput').addEventListener('input', updateSalaryPreview);
         $('salSave').onclick = function () { saveSalary(); };
         $('salRemove').onclick = function () { saveSalary(0); };
+        if ($('incomeSource')) $('incomeSource').onchange = function(){ setSalarySource(this.value); };
 
-        $('srcSalary').onclick = function () { setSalarySource('Salary'); };
-        $('srcExtra').onclick  = function () { setSalarySource('Extra'); };
+        if ($('gear')) $('gear').onclick = function(){ showConnect(); };
 
         watchTotalCard();
 
         document.addEventListener('keydown', function (e) {
           if (e.key === 'Escape' && S.sheetOpen) { closeSheet(); return; }
           if (S.sheetOpen) return;
-          if (e.target.tagName === 'INPUT') return;
-
+          if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
           if (/^[0-9]$/.test(e.key)) pressKey(e.key);
           else if (e.key === '.') pressKey('.');
           else if (e.key === 'Backspace') pressKey('del');
@@ -2803,33 +3229,14 @@ function periodLabel(monthNo, year) {
         window.addEventListener('online', flushQueue);
         renderQueuePill();
 
-        if (!GAS) {
-          $('gear').hidden = false;
-          $('gear').onclick = function () { showConnect(); };
-          $('cfgSave').onclick = tryConnect;
-          $('cfgPin').addEventListener('keydown', function (e) {
-            if (e.key === 'Enter') tryConnect();
-          });
-
-          if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js').catch(function () {});
-          }
-
-          if (!cfg().url) {
-            showConnect();
-            return;
-          }
-        }
-
         api('getBootstrap')
-          .then(applyBootstrap)
+          .then(function (b) { applyBootstrap(b); })
           .catch(function (err) {
-            var m = String(err && err.message || err);
-            if (!GAS && (m.indexOf('passcode') > -1 || m === 'not-configured')) {
-              showConnect(m.indexOf('passcode') > -1 ? 'Wrong passcode. Check it and try again.' : null);
-              return;
+            if (String(err && err.message || err) === 'not-configured' && !GAS) {
+              showConnect();
+            } else {
+              offlineFallback();
             }
-            offlineFallback();
           });
       }
 
