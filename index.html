@@ -1627,7 +1627,7 @@
           <h1>Xpense</h1>
         </div>
         <p>every taka counts ✦</p>
-        <button class="gear" id="gear" type="button" title="Connection settings" hidden>⚙</button>
+        <button class="gear" id="gear" type="button" title="Connection settings" aria-label="Connection settings">⚙</button>
       </div>
 
       <div class="total-card" id="totalCard">
@@ -3098,8 +3098,8 @@ function periodLabel(monthNo, year) {
         var url = $('cfgUrl').value.trim();
         var pin = $('cfgPin').value;
 
-        if (!/^https:\/\/script\.google(usercontent)?\.com\//.test(url)) {
-          showConnect('That does not look like an Apps Script web app URL. It should start with https://script.google.com/macros/s/ and end with /exec');
+        if (!/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec(?:\?.*)?$/.test(url)) {
+          showConnect('Enter the Apps Script Web App URL that ends with /exec. Example: https://script.google.com/macros/s/.../exec');
           return;
         }
 
@@ -3222,8 +3222,17 @@ function periodLabel(monthNo, year) {
         api('getBootstrap')
           .then(function (b) { applyBootstrap(b); })
           .catch(function (err) {
-            if (String(err && err.message || err) === 'not-configured' && !GAS) {
-              showConnect();
+            if (!GAS) {
+              var message = String(err && err.message || err);
+              if (message === 'not-configured') {
+                showConnect();
+              } else {
+                showConnect(
+                  message.indexOf('Wrong passcode') > -1
+                    ? 'Wrong passcode. Enter the same passcode used in Code.gs.'
+                    : 'Unable to connect. Check the Web App URL, passcode, and Apps Script deployment access.'
+                );
+              }
             } else {
               offlineFallback();
             }
