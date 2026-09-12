@@ -1462,6 +1462,36 @@
     .queue.on{ display:block; }
 
 
+    /* ───────────── SAVING GOALS ───────────── */
+    .goals-dashboard{margin:0 0 16px;padding:13px;border-radius:18px;background:rgba(255,255,255,0.045);border:1px solid rgba(52,211,153,.20);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);}
+    .goals-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;}
+    .goals-title{margin:0;color:rgba(255,255,255,.42);font-size:8.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;}
+    .goals-open{min-height:28px;padding:5px 10px;border-radius:50px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:rgba(255,255,255,.72);font-size:10.5px;font-weight:750;}
+    .goal-dash-row{padding:10px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);margin-top:7px;}
+    .goal-dash-top{display:flex;align-items:baseline;justify-content:space-between;gap:8px;}
+    .goal-dash-name{font-size:12.5px;font-weight:800;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .goal-dash-pct{font-size:11px;font-weight:900;color:#34D399;white-space:nowrap;}
+    .goal-dash-money{display:flex;justify-content:space-between;gap:8px;margin-top:4px;color:rgba(255,255,255,.36);font-size:10.5px;}
+    .goal-dash-money b{color:#fff;font-weight:800;}
+    .goal-progress{height:7px;border-radius:50px;background:rgba(255,255,255,.07);overflow:hidden;margin-top:8px;}
+    .goal-progress > div{height:100%;border-radius:50px;background:linear-gradient(90deg,#10B981,#34D399);}
+    .goal-empty{color:rgba(255,255,255,.30);font-size:11.5px;line-height:1.45;padding:3px 0;}
+    .goal-complete{color:#34D399;font-weight:800;}
+    .goal-form{padding:12px;border-radius:16px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.08);margin-bottom:11px;}
+    .goal-form .details{margin-bottom:9px;}
+    .goal-editing{font-size:10.5px;color:#FBBF24;margin:-2px 0 9px;}
+    .goal-card{padding:12px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);margin-bottom:8px;}
+    .goal-card.completed{border-color:rgba(52,211,153,.35);}
+    .goal-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:9px;}
+    .goal-card-name{font-size:13px;font-weight:850;}
+    .goal-card-place{margin-top:3px;color:rgba(255,255,255,.30);font-size:10.5px;}
+    .goal-card-pct{font-size:13px;font-weight:900;color:#34D399;white-space:nowrap;}
+    .goal-values{display:flex;justify-content:space-between;gap:8px;margin-top:9px;font-size:10.5px;color:rgba(255,255,255,.36);}
+    .goal-values b{color:#fff;font-weight:800;}
+    .goal-card-actions{display:grid;grid-template-columns:1fr auto auto;gap:7px;margin-top:9px;}
+    .goal-card-actions .tool-input{min-width:0;}
+    .goal-card-actions .tool-save,.goal-card-actions .tool-danger{white-space:nowrap;}
+
     /* ───────────── EXTENDED FINANCE TOOLS ───────────── */
     .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;}
     .compact-select{min-height:48px;appearance:none;-webkit-appearance:none;padding-right:34px;background-image:linear-gradient(45deg,transparent 50%,rgba(255,255,255,.42) 50%),linear-gradient(135deg,rgba(255,255,255,.42) 50%,transparent 50%);background-position:calc(100% - 16px) 21px,calc(100% - 11px) 21px;background-size:5px 5px,5px 5px;background-repeat:no-repeat;}
@@ -1656,6 +1686,14 @@
       </div>
 
       <div class="account-strip" id="accountStrip" aria-label="Account balances"></div>
+
+      <div class="goals-dashboard" id="goalsDashboard">
+        <div class="goals-head">
+          <p class="goals-title">🎯 Saving goals</p>
+          <button class="goals-open" id="btnGoals" type="button">Open goals</button>
+        </div>
+        <div id="goalsDashboardList"><div class="goal-empty">No saving goals yet. Create one to start tracking a purchase goal.</div></div>
+      </div>
 
       <div class="stats">
         <div class="stat" id="todayStat" style="--stat-color:#7C3AED;">
@@ -1881,6 +1919,7 @@
           <div class="tool-grid">
             <button class="tool-btn" data-tool="budget" type="button">🎯 Budgets<small>Category limits & alerts</small></button>
             <button class="tool-btn" data-tool="savings" type="button">💚 Savings<small>Monthly + cumulative</small></button>
+            <button class="tool-btn" data-tool="goals" type="button">🎯 Saving Goals<small>Save for something specific</small></button>
             <button class="tool-btn" data-tool="insights" type="button">📊 Insights<small>Where the money went</small></button>
             <button class="tool-btn" data-tool="compare" type="button">↕ Compare<small>Month vs previous</small></button>
             <button class="tool-btn" data-tool="category" type="button">🔎 Category<small>Food, Car, Bills…</small></button>
@@ -1950,7 +1989,9 @@
         editId: null,
         toolYear: null,
         toolMonthNo: null,
-        toolData: null
+        toolData: null,
+        savingGoals: [],
+        goalEditId: null
       };
 
       var QKEY = 'exp_queue_v2';
@@ -2362,6 +2403,7 @@ function periodLabel(monthNo, year) {
         renderSummary(sum);
         renderBalance(sum);
         renderAccountStrip(S.accounts || []);
+        renderGoalsDashboard(S.savingGoals || []);
       }
 
       /**
@@ -2369,6 +2411,41 @@ function periodLabel(monthNo, year) {
        * everything ever spent. This does not reset on the 1st, so whatever is
        * left over at the end of a month carries into the next one.
        */
+      function renderGoalsDashboard(list) {
+        var box = $('goalsDashboardList');
+        if (!box) return;
+        box.innerHTML = '';
+        var goals = (list || []).slice().sort(function(a,b){
+          if (a.status !== b.status) return a.status === 'Active' ? -1 : 1;
+          return (b.percent || 0) - (a.percent || 0);
+        });
+        if (!goals.length) {
+          box.innerHTML = '<div class="goal-empty">No saving goals yet. Create one to start tracking a purchase goal.</div>';
+          return;
+        }
+        goals.slice(0,5).forEach(function(g){
+          var row = document.createElement('div'); row.className = 'goal-dash-row';
+          var top = document.createElement('div'); top.className='goal-dash-top';
+          var name = document.createElement('span'); name.className='goal-dash-name'; name.textContent=g.name;
+          var pct = document.createElement('span'); pct.className='goal-dash-pct'; pct.textContent=Math.round(g.percent||0)+'%';
+          if (g.status === 'Completed') pct.className += ' goal-complete';
+          top.appendChild(name); top.appendChild(pct);
+          var moneyRow = document.createElement('div'); moneyRow.className='goal-dash-money';
+          moneyRow.innerHTML='<span>Saved <b></b></span><span>More needed <b></b></span>';
+          moneyRow.querySelectorAll('b')[0].textContent=money(g.saved||0);
+          moneyRow.querySelectorAll('b')[1].textContent=money(g.remaining||0);
+          var progress=document.createElement('div'); progress.className='goal-progress';
+          var fill=document.createElement('div'); fill.style.width=Math.min(100,Math.max(0,g.percent||0))+'%'; progress.appendChild(fill);
+          row.appendChild(top); row.appendChild(moneyRow); row.appendChild(progress);
+          box.appendChild(row);
+        });
+        if (goals.length > 5) {
+          var more=document.createElement('div'); more.className='goal-empty'; more.style.textAlign='center';
+          more.textContent='+'+(goals.length-5)+' more goal'+(goals.length-5===1?'':'s')+' · Open goals to view all';
+          box.appendChild(more);
+        }
+      }
+
       function renderTotal(sum) {
         var received = Number(sum.totalIncome || 0);
         var spent = Number(sum.totalSpent || 0);
@@ -2855,6 +2932,46 @@ function periodLabel(monthNo, year) {
         return '<div class="tool-month-nav"><button type="button" data-tool-month="-1">‹</button><span>' + periodLabel(S.toolMonthNo, S.toolYear) + '</span><button type="button" data-tool-month="1">›</button></div>';
       }
 
+      function renderSavingGoalsTool() {
+        api('getSavingGoals',{activeOnly:false}).then(function(list){
+          S.savingGoals = list || [];
+          var editing = S.goalEditId ? S.savingGoals.find(function(g){return String(g.id)===String(S.goalEditId);}) : null;
+          var form = '<div class="goal-form">';
+          form += editing ? '<div class="goal-editing">Editing: '+escapeHtml(editing.name)+'</div>' : '<div class="tool-row-sub" style="margin:0 0 9px">Create a goal for something you want to buy or save for.</div>';
+          form += '<input class="details" id="goalName" type="text" placeholder="Goal name, e.g. PS5" maxlength="100" value="'+escapeAttr(editing ? editing.name : '')+'">';
+          form += '<div class="field-grid">';
+          form += '<input class="details" id="goalTarget" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Target amount" value="'+(editing ? editing.target : '')+'">';
+          form += '<input class="details" id="goalSaved" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Already saved" value="'+(editing ? editing.saved : '0')+'">';
+          form += '</div>';
+          form += '<div class="field-label">Saved in</div><select class="details compact-select tool-select" id="goalAccount">';
+          accountNames(false).forEach(function(a){ form += '<option value="'+escapeAttr(a)+'"'+(editing && editing.account===a?' selected':'')+'>'+escapeHtml(a)+'</option>'; });
+          form += '</select>';
+          form += '<input class="details" id="goalNotes" type="text" placeholder="Note (optional)" maxlength="250" value="'+escapeAttr(editing ? editing.notes : '')+'">';
+          form += '<div class="tool-row-actions"><button class="tool-save" id="goalSaveBtn" type="button">'+(editing?'Save changes':'Create goal')+'</button>'+(editing?'<button class="tool-danger" id="goalCancelEdit" type="button">Cancel</button>':'')+'</div>';
+          form += '</div>';
+
+          var body = '<div class="report-muted" style="margin-bottom:10px">Goal savings are a tracker for money you have earmarked. They do not reduce Cash, bKash or Bank again, so your account balance is not double-counted.</div>' + form;
+          if (!(S.savingGoals||[]).length) {
+            body += '<div class="goal-empty">No goals yet.</div>';
+          } else {
+            (S.savingGoals||[]).forEach(function(g){
+              var pct=Math.min(100,Math.max(0,g.percent||0));
+              body += '<div class="goal-card '+(g.status==='Completed'?'completed':'')+'">';
+              body += '<div class="goal-card-top"><div><div class="goal-card-name">'+escapeHtml(g.name)+'</div><div class="goal-card-place">Saved in '+escapeHtml(g.account)+'</div></div><div class="goal-card-pct">'+Math.round(pct)+'%</div></div>';
+              body += '<div class="goal-values"><span>Saved <b>'+money(g.saved)+'</b></span><span>More <b>'+money(g.remaining)+'</b></span><span>Target <b>'+money(g.target)+'</b></span></div>';
+              body += '<div class="progress-mini"><div style="width:'+pct+'%"></div></div>';
+              if (g.status==='Completed') body += '<div class="budget-warning report-positive">Goal reached ✓</div>';
+              body += '<div class="goal-card-actions"><input class="tool-input" data-goal-add="'+escapeAttr(g.id)+'" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Add saved amount">';
+              body += '<button class="tool-save" type="button" data-add-goal-saving="'+escapeAttr(g.id)+'">Add</button>';
+              body += '<button class="tool-danger" type="button" data-edit-goal="'+escapeAttr(g.id)+'">Edit</button></div>';
+              body += '<div class="tool-row-actions"><button class="tool-danger" type="button" data-delete-goal="'+escapeAttr(g.id)+'">Delete goal</button></div>';
+              body += '</div>';
+            });
+          }
+          toolShell('Saving goals',body);
+        }).catch(showToolError);
+      }
+
       function renderBudgetTool() {
         api('getBudgetSummary', {year:S.toolYear, monthNo:S.toolMonthNo}).then(function(list){
           var html=toolMonthNav();
@@ -3005,6 +3122,14 @@ function periodLabel(monthNo, year) {
         $('exportCsv').onclick=exportCsv; $('exportJson').onclick=exportJson; $('exportExcel').onclick=function(){api('exportToExcel').then(function(url){snack('Excel copy created'); if(url) window.open(url,'_blank');}).catch(function(){snack('Could not create Excel copy','err');});}; $('exportPrint').onclick=printMonthlyReport;
       }
 
+      function refreshSavingGoals() {
+        api('getSavingGoals',{activeOnly:false}).then(function(list){
+          S.savingGoals=list||[];
+          renderGoalsDashboard(S.savingGoals);
+          if ($('toolsPanel') && !$('toolsPanel').hidden) renderSavingGoalsTool();
+        }).catch(function(){});
+      }
+
       function showToolError(){snack('Could not load this report.','err');}
       function escapeHtml(s){return String(s==null?'':s).replace(/[&<>'"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','\"':'&quot;'}[c];});}
       function escapeAttr(s){return escapeHtml(s).replace(/`/g,'&#96;');}
@@ -3018,7 +3143,7 @@ function periodLabel(monthNo, year) {
         api('updateExpense',payload).then(function(res){if(res.accounts)S.accounts=res.accounts;applySummary(res.summary);closeSheet();snack('Expense updated. Account balance recalculated.');if(res.budgetWarning)snack(res.budgetWarning.category+' budget is '+Math.round(res.budgetWarning.percent)+'% used.','warn');}).catch(function(e){snack(e.message||'Could not update','err');});
       }
 
-      function exportCsv(){api('getExportBundle').then(function(b){var rows=[['Expenses'],['ID','Logged at','Date','Day','Month','Month no','Year','Amount','Category','Where','Account','Tags']].concat(b.expenses||[]).concat([[],['Income'],['ID','Logged at','Date','Month','Month no','Year','Amount','Source','Account','Notes']]).concat(b.income||[]).concat([[],['Held Money'],['ID','Logged at','Date','Account','Amount','Whose money?','Purpose','Notes']]).concat(b.heldMoney||[]);var csv=rows.map(function(row){return row.map(function(x){var s=String(x==null?'':x);return '"'+s.replace(/"/g,'""')+'"';}).join(',');}).join('\n');downloadBlob(csv,'xpense-backup.csv','text/csv');}).catch(function(){snack('Could not export CSV','err');});}
+      function exportCsv(){api('getExportBundle').then(function(b){var rows=[['Expenses'],['ID','Logged at','Date','Day','Month','Month no','Year','Amount','Category','Where','Account','Tags']].concat(b.expenses||[]).concat([[],['Income'],['ID','Logged at','Date','Month','Month no','Year','Amount','Source','Account','Notes']]).concat(b.income||[]).concat([[],['Held Money'],['ID','Logged at','Date','Account','Amount','Whose money?','Purpose','Notes']]).concat(b.heldMoney||[]).concat([[],['Saving Goals'],['ID','Created at','Goal name','Target amount','Saved amount','Account / place','Created date','Status','Notes']]).concat(b.savingGoals||[]);var csv=rows.map(function(row){return row.map(function(x){var s=String(x==null?'':x);return '"'+s.replace(/"/g,'""')+'"';}).join(',');}).join('\n');downloadBlob(csv,'xpense-backup.csv','text/csv');}).catch(function(){snack('Could not export CSV','err');});}
       function exportJson(){api('getExportBundle').then(function(b){downloadBlob(JSON.stringify(b,null,2),'xpense-backup.json','application/json');}).catch(function(){snack('Could not export JSON','err');});}
       function downloadBlob(text,name,type){var blob=new Blob([text],{type:type});var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(a.href);},1000);}
       function printMonthlyReport(){
@@ -3039,6 +3164,7 @@ function periodLabel(monthNo, year) {
 
       function runTool(name){
         if(name==='budget')renderBudgetTool();
+         else if(name==='goals')renderSavingGoalsTool();
         else if(name==='savings')renderSavingsTool();
         else if(name==='insights')renderInsightsTool();
         else if(name==='compare')renderCompareTool();
@@ -3073,6 +3199,58 @@ function periodLabel(monthNo, year) {
           }
           return;
         }
+        var saveGoalBtn = e.target.closest('#goalSaveBtn');
+        if (saveGoalBtn) {
+          var payload = {
+            name:$('goalName').value.trim(),
+            target:Number($('goalTarget').value),
+            saved:Number($('goalSaved').value),
+            account:$('goalAccount').value,
+            notes:$('goalNotes').value.trim()
+          };
+          var fn = S.goalEditId ? 'updateSavingGoal' : 'addSavingGoal';
+          if (S.goalEditId) payload.id = S.goalEditId;
+          api(fn,payload).then(function(){
+            S.goalEditId=null;
+            refreshSavingGoals();
+            snack(fn==='addSavingGoal'?'Saving goal created.':'Saving goal updated.');
+          }).catch(function(err){snack(err.message||'Could not save goal','err');});
+          return;
+        }
+
+        var cancelGoal = e.target.closest('#goalCancelEdit');
+        if (cancelGoal) { S.goalEditId=null; renderSavingGoalsTool(); return; }
+
+        var editGoal = e.target.closest('[data-edit-goal]');
+        if (editGoal) { S.goalEditId=editGoal.getAttribute('data-edit-goal'); renderSavingGoalsTool(); return; }
+
+        var addGoal = e.target.closest('[data-add-goal-saving]');
+        if (addGoal) {
+          var gid=addGoal.getAttribute('data-add-goal-saving');
+          var input=document.querySelector('[data-goal-add="'+cssEscape(gid)+'"]');
+          var amt=Number(input ? input.value : 0);
+          if (!(amt>0)) { snack('Enter an amount to add.','warn'); return; }
+          api('addGoalSaving',{id:gid,amount:amt}).then(function(){
+            refreshSavingGoals();
+            snack('Saving added to goal.');
+          }).catch(function(err){snack(err.message||'Could not add saving','err');});
+          return;
+        }
+
+        var deleteGoal = e.target.closest('[data-delete-goal]');
+        if (deleteGoal) {
+          var did=deleteGoal.getAttribute('data-delete-goal');
+          if (!window.confirm('Delete this saving goal? Your account balance will not change.')) return;
+          api('deleteSavingGoal',did).then(function(res){
+            S.goalEditId=null;
+            S.savingGoals=res.goals||[];
+            renderGoalsDashboard(S.savingGoals);
+            snack('Saving goal deleted.');
+            renderSavingGoalsTool();
+          }).catch(function(err){snack(err.message||'Could not delete goal','err');});
+          return;
+        }
+
         var saveBudget = e.target.closest('[data-save-budget]');
         if (saveBudget) {
           var cat = saveBudget.getAttribute('data-save-budget');
@@ -3266,6 +3444,7 @@ function periodLabel(monthNo, year) {
         S.accounts = b.accounts || [];
         S.heldMoney = b.heldMoney || [];
         S.heldSummary = b.heldSummary || {total:0,byAccount:[]};
+        S.savingGoals = b.savingGoals || [];
         S.incomeSources = b.incomeSources || ['Salary','Freelance','Bonus','Gift','Refund','Other','Extra'];
 
         populateSelect('expenseAccount', accountNames(true), 'No account');
@@ -3315,6 +3494,7 @@ function periodLabel(monthNo, year) {
         $('btnSalary').onclick = openSalary;
         $('btnHistory').onclick = openHistory;
         $('btnTools').onclick = openTools;
+        if ($('btnGoals')) $('btnGoals').onclick = function(){ openTools(); S.goalEditId=null; renderSavingGoalsTool(); };
 
         $('salClose').onclick = closeSheet;
         $('salScrim').onclick = closeSheet;
