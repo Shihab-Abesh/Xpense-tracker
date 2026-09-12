@@ -8,7 +8,7 @@
  *
  * Bump CACHE whenever you change index.html or other shell files.
  */
-const CACHE = 'xpense-v8';
+const CACHE = 'xpense-v9';
 
 const SHELL = [
   './',
