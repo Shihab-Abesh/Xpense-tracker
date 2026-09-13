@@ -1529,7 +1529,7 @@
     .account-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:0 0 14px;}
     .account-mini{padding:9px 8px;border-radius:14px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08);min-width:0;}
     .account-mini .name{font-size:9px;font-weight:800;letter-spacing:.10em;text-transform:uppercase;color:rgba(255,255,255,.40);margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-    .account-mini .own{font-size:13px;font-weight:900;color:#34D399;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .account-mini .own{font-size:11.5px;font-weight:900;color:#34D399;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px}.account-mini .save,.account-mini .avail{font-size:9.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}.account-mini .save{color:#FBBF24}.account-mini .avail{color:rgba(255,255,255,.42)}
     .tool-row-actions .tool-danger{flex:0 0 auto;}
     .tool-row-actions .tool-input{min-width:0;}
     .income-records{margin-top:12px;}
@@ -2461,7 +2461,7 @@ function periodLabel(monthNo, year) {
         $('totalVal').parentNode.classList.remove('unset');
         $('totalVal').textContent = (own < 0 ? '-' : '') + num(Math.abs(own));
         $('topbarVal').textContent = (own < 0 ? '-৳' : '৳') + num(Math.abs(own));
-        $('totalHint').textContent = 'Your own money across Cash, bKash and Bank.';
+        $('totalHint').textContent = 'Total Money = available money + money reserved for saving goals. Held money is excluded.';
       }
 
       function renderAccountStrip(list) {
@@ -2471,9 +2471,11 @@ function periodLabel(monthNo, year) {
         (list || []).forEach(function(a) {
           var el = document.createElement('div');
           el.className = 'account-mini';
-          el.innerHTML = '<div class="name"></div><div class="own"></div>';
+          el.innerHTML = '<div class="name"></div><div class="own"></div><div class="save"></div><div class="avail"></div>';
           el.querySelector('.name').textContent = a.name;
-          el.querySelector('.own').textContent = money(a.ownBalance || 0);
+          el.querySelector('.own').textContent = 'Total ' + money(a.ownBalance || 0);
+          el.querySelector('.save').textContent = 'Saving ' + money(a.savingsBalance || 0);
+          el.querySelector('.avail').textContent = 'Available ' + money(a.availableBalance || 0);
           box.appendChild(el);
         });
       }
@@ -2936,34 +2938,45 @@ function periodLabel(monthNo, year) {
         api('getSavingGoals',{activeOnly:false}).then(function(list){
           S.savingGoals = list || [];
           var editing = S.goalEditId ? S.savingGoals.find(function(g){return String(g.id)===String(S.goalEditId);}) : null;
+          var accountOpts = function(selected){
+            return accountNames(false).map(function(a){return '<option value="'+escapeAttr(a)+'"'+(a===selected?' selected':'')+'>'+escapeHtml(a)+'</option>';}).join('');
+          };
           var form = '<div class="goal-form">';
-          form += editing ? '<div class="goal-editing">Editing: '+escapeHtml(editing.name)+'</div>' : '<div class="tool-row-sub" style="margin:0 0 9px">Create a goal for something you want to buy or save for.</div>';
+          form += editing ? '<div class="goal-editing">Editing: '+escapeHtml(editing.name)+'</div>' : '<div class="tool-row-sub" style="margin:0 0 9px">Create a goal for something you want to buy. Any initial saving is moved from the source account into the saving account.</div>';
           form += '<input class="details" id="goalName" type="text" placeholder="Goal name, e.g. PS5" maxlength="100" value="'+escapeAttr(editing ? editing.name : '')+'">';
           form += '<div class="field-grid">';
           form += '<input class="details" id="goalTarget" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Target amount" value="'+(editing ? editing.target : '')+'">';
-          form += '<input class="details" id="goalSaved" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Already saved" value="'+(editing ? editing.saved : '0')+'">';
+          if (editing) form += '<div class="details" style="display:flex;align-items:center;color:rgba(255,255,255,.55)">Saved: '+money(editing.saved||0)+'</div>';
+          else form += '<input class="details" id="goalSaved" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Initial saving (optional)" value="0">';
           form += '</div>';
-          form += '<div class="field-label">Saved in</div><select class="details compact-select tool-select" id="goalAccount">';
-          accountNames(false).forEach(function(a){ form += '<option value="'+escapeAttr(a)+'"'+(editing && editing.account===a?' selected':'')+'>'+escapeHtml(a)+'</option>'; });
-          form += '</select>';
+          if (!editing) {
+            form += '<div class="field-label">Take money from</div><select class="details compact-select tool-select" id="goalSource">'+accountOpts('Cash')+'</select>';
+          }
+          form += '<div class="field-label">Save this goal money in</div><select class="details compact-select tool-select" id="goalAccount">'+accountOpts(editing ? editing.account : 'Cash')+'</select>';
           form += '<input class="details" id="goalNotes" type="text" placeholder="Note (optional)" maxlength="250" value="'+escapeAttr(editing ? editing.notes : '')+'">';
           form += '<div class="tool-row-actions"><button class="tool-save" id="goalSaveBtn" type="button">'+(editing?'Save changes':'Create goal')+'</button>'+(editing?'<button class="tool-danger" id="goalCancelEdit" type="button">Cancel</button>':'')+'</div>';
           form += '</div>';
 
-          var body = '<div class="report-muted" style="margin-bottom:10px">Goal savings are a tracker for money you have earmarked. They do not reduce Cash, bKash or Bank again, so your account balance is not double-counted.</div>' + form;
+          var body = '<div class="report-muted" style="margin-bottom:10px">Saving goal money remains part of your total money, but it is separated from the account’s available money. The saving account shows the reserved amount.</div>' + form;
           if (!(S.savingGoals||[]).length) {
             body += '<div class="goal-empty">No goals yet.</div>';
           } else {
+            var names = accountNames(false);
             (S.savingGoals||[]).forEach(function(g){
               var pct=Math.min(100,Math.max(0,g.percent||0));
               body += '<div class="goal-card '+(g.status==='Completed'?'completed':'')+'">';
-              body += '<div class="goal-card-top"><div><div class="goal-card-name">'+escapeHtml(g.name)+'</div><div class="goal-card-place">Saved in '+escapeHtml(g.account)+'</div></div><div class="goal-card-pct">'+Math.round(pct)+'%</div></div>';
+              body += '<div class="goal-card-top"><div><div class="goal-card-name">'+escapeHtml(g.name)+'</div><div class="goal-card-place">Saving money in '+escapeHtml(g.account)+'</div></div><div class="goal-card-pct">'+Math.round(pct)+'%</div></div>';
               body += '<div class="goal-values"><span>Saved <b>'+money(g.saved)+'</b></span><span>More <b>'+money(g.remaining)+'</b></span><span>Target <b>'+money(g.target)+'</b></span></div>';
               body += '<div class="progress-mini"><div style="width:'+pct+'%"></div></div>';
               if (g.status==='Completed') body += '<div class="budget-warning report-positive">Goal reached ✓</div>';
-              body += '<div class="goal-card-actions"><input class="tool-input" data-goal-add="'+escapeAttr(g.id)+'" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Add saved amount">';
-              body += '<button class="tool-save" type="button" data-add-goal-saving="'+escapeAttr(g.id)+'">Add</button>';
-              body += '<button class="tool-danger" type="button" data-edit-goal="'+escapeAttr(g.id)+'">Edit</button></div>';
+              if (g.status!=='Completed') {
+                body += '<div class="goal-card-actions" style="grid-template-columns:1fr 1fr">';
+                body += '<select class="tool-input compact-select" data-goal-source="'+escapeAttr(g.id)+'">'+accountNames(false).map(function(a){return '<option value="'+escapeAttr(a)+'">From '+escapeHtml(a)+'</option>';}).join('')+'</select>';
+                body += '<select class="tool-input compact-select" data-goal-dest="'+escapeAttr(g.id)+'">'+names.map(function(a){return '<option value="'+escapeAttr(a)+'" '+(a===g.account?'selected':'')+'>'+escapeHtml(a)+'</option>';}).join('')+'</select></div>';
+                body += '<div class="goal-card-actions"><input class="tool-input" data-goal-add="'+escapeAttr(g.id)+'" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Amount to save"><button class="tool-save" type="button" data-add-goal-saving="'+escapeAttr(g.id)+'">Save money</button><button class="tool-danger" type="button" data-edit-goal="'+escapeAttr(g.id)+'">Edit</button></div>';
+              } else {
+                body += '<div class="goal-card-actions"><button class="tool-danger" type="button" data-edit-goal="'+escapeAttr(g.id)+'">Edit goal</button></div>';
+              }
               body += '<div class="tool-row-actions"><button class="tool-danger" type="button" data-delete-goal="'+escapeAttr(g.id)+'">Delete goal</button></div>';
               body += '</div>';
             });
@@ -3204,7 +3217,9 @@ function periodLabel(monthNo, year) {
           var payload = {
             name:$('goalName').value.trim(),
             target:Number($('goalTarget').value),
-            saved:Number($('goalSaved').value),
+            saved: S.goalEditId ? 0 : Number($('goalSaved').value || 0),
+            initialSaved: S.goalEditId ? 0 : Number($('goalSaved').value || 0),
+            sourceAccount: S.goalEditId ? '' : ($('goalSource') ? $('goalSource').value : 'Cash'),
             account:$('goalAccount').value,
             notes:$('goalNotes').value.trim()
           };
@@ -3230,9 +3245,13 @@ function periodLabel(monthNo, year) {
           var input=document.querySelector('[data-goal-add="'+cssEscape(gid)+'"]');
           var amt=Number(input ? input.value : 0);
           if (!(amt>0)) { snack('Enter an amount to add.','warn'); return; }
-          api('addGoalSaving',{id:gid,amount:amt}).then(function(){
+          var sourceSel=document.querySelector('[data-goal-source="'+cssEscape(gid)+'"]');
+          var destSel=document.querySelector('[data-goal-dest="'+cssEscape(gid)+'"]');
+          api('addGoalSaving',{id:gid,amount:amt,sourceAccount:sourceSel?sourceSel.value:'Cash',destinationAccount:destSel?destSel.value:'Cash',date:S.today}).then(function(res){
+            if(res.accounts)S.accounts=res.accounts;
+            if(res.summary)applySummary(res.summary);
             refreshSavingGoals();
-            snack('Saving added to goal.');
+            snack('Saving moved to the goal.');
           }).catch(function(err){snack(err.message||'Could not add saving','err');});
           return;
         }
@@ -3244,8 +3263,10 @@ function periodLabel(monthNo, year) {
           api('deleteSavingGoal',did).then(function(res){
             S.goalEditId=null;
             S.savingGoals=res.goals||[];
+            if(res.accounts)S.accounts=res.accounts;
+            if(res.summary)applySummary(res.summary);
             renderGoalsDashboard(S.savingGoals);
-            snack('Saving goal deleted.');
+            snack('Saving goal deleted. Reserved money is available again.');
             renderSavingGoalsTool();
           }).catch(function(err){snack(err.message||'Could not delete goal','err');});
           return;
