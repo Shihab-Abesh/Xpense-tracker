@@ -1450,16 +1450,68 @@
 
     .queue{
       display:none;
+      align-items:center;
+      gap:11px;
       margin:0 0 14px;
-      padding:8px 12px;
-      border-radius:10px;
-      background:#3b3115;
-      border:1px solid #5c4a1a;
-      color:#fbbf24;
-      font-size:12.5px;
+      padding:10px 10px 10px 13px;
+      border-radius:16px;
+      background:rgba(251,191,36,.08);
+      border:1px solid rgba(251,191,36,.28);
+      color:#fde68a;
+      -webkit-backdrop-filter:blur(14px);
+      backdrop-filter:blur(14px);
     }
 
-    .queue.on{ display:block; }
+    .queue.on{ display:flex; }
+
+    .queue-dot{
+      flex:0 0 auto;
+      width:9px;
+      height:9px;
+      border-radius:50%;
+      background:#fbbf24;
+      box-shadow:0 0 0 4px rgba(251,191,36,.16);
+    }
+
+    .queue.busy .queue-dot{ animation:queuePulse 1s ease-in-out infinite; }
+
+    .queue-body{ flex:1 1 auto; min-width:0; }
+
+    .queue-text{
+      margin:0;
+      font-size:12.5px;
+      font-weight:700;
+      line-height:1.35;
+    }
+
+    .queue-why{
+      margin:3px 0 0;
+      font-size:11.5px;
+      line-height:1.35;
+      color:rgba(255,255,255,.55);
+      overflow-wrap:anywhere;
+    }
+
+    .queue-retry{
+      flex:0 0 auto;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.06);
+      color:#fff;
+      font-size:12px;
+      font-weight:750;
+      padding:7px 11px;
+      border-radius:11px;
+      cursor:pointer;
+    }
+
+    .queue-retry:disabled{ opacity:.45; cursor:default; }
+    .queue-retry:focus-visible{ outline:2px solid #fde68a; outline-offset:2px; }
+
+    @keyframes queuePulse{ 50%{ opacity:.3; } }
+
+    @media (prefers-reduced-motion:reduce){
+      .queue.busy .queue-dot{ animation:none; }
+    }
 
 
     /* ───────────── EXTENDED FINANCE TOOLS ───────────── */
@@ -1637,6 +1689,15 @@
         <button class="gear" id="gear" type="button" title="Connection settings" aria-label="Connection settings">⚙</button>
       </div>
 
+      <div class="queue" id="queuePill" role="status" aria-live="polite">
+        <span class="queue-dot" aria-hidden="true"></span>
+        <div class="queue-body">
+          <p class="queue-text" id="queueText"></p>
+          <p class="queue-why" id="queueWhy" hidden></p>
+        </div>
+        <button class="queue-retry" id="queueRetry" type="button">Sync now</button>
+      </div>
+
       <div class="total-card" id="totalCard">
         <p class="total-k">💰 Total in hand</p>
         <p class="total-v">
@@ -1692,8 +1753,6 @@
           <span class="legend-item"><i class="legend-dot out"></i>Spent <b id="balSpent">৳0</b></span>
         </div>
       </div>
-
-      <div class="queue" id="queuePill"></div>
 
       <div class="amount-card" id="amountCard">
         <div class="active-cat">
@@ -2008,53 +2067,48 @@
         var c = cfg();
         if (!c.url) return Promise.reject(new Error('not-configured'));
 
-        // Hosted GitHub Pages route: use GET for every action.
-        // The Apps Script doGet() endpoint already supports all actions,
-        // and this avoids cross-origin POST/preflight issues.
+        // Match what the plain Apps Script call would have received.
         var payload = arg;
+        if (fn === 'deleteEntry') payload = { id: arg };
+        if (fn === 'getMonthlyHistory') payload = { limit: arg };
 
-        if (fn === 'deleteEntry') {
-          payload = { id: arg };
-        }
+        var readOnly = fn === 'getBootstrap' || fn === 'getSummary' ||
+          fn === 'getMonthDetail' || fn === 'getMonthlyHistory';
 
-        if (fn === 'deleteIncome') {
-          payload = { id: arg };
-        }
+        if (readOnly) {
+          var qs = new URLSearchParams({
+            action: fn,
+            token: c.pin,
+            payload: JSON.stringify(payload || {})
+          });
 
-        if (fn === 'deleteTransfer') {
-          payload = { id: arg };
-        }
-
-        if (fn === 'deleteHeldMoney') {
-          payload = { id: arg };
-        }
-
-        if (fn === 'getMonthlyHistory') {
-          payload = { limit: arg };
-        }
-
-        var qs = new URLSearchParams({
-          action: fn,
-          token: c.pin,
-          payload: JSON.stringify(payload || {})
-        });
-
-        return fetch(
-          c.url + (c.url.indexOf('?') > -1 ? '&' : '?') + qs.toString(),
-          {
+          return fetch(c.url + (c.url.indexOf('?') > -1 ? '&' : '?') + qs.toString(), {
             method: 'GET',
             cache: 'no-store',
             redirect: 'follow'
-          }
-        )
+          })
+            .then(function (r) {
+              if (!r.ok) throw new Error('HTTP ' + r.status);
+              return r.json();
+            })
+            .then(function (j) {
+              if (!j || !j.ok) throw new Error((j && j.error) || 'Request failed');
+              return j.data;
+            });
+        }
+
+        return fetch(c.url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          redirect: 'follow',
+          body: JSON.stringify({ action: fn, token: c.pin, payload: payload || {} })
+        })
           .then(function (r) {
             if (!r.ok) throw new Error('HTTP ' + r.status);
             return r.json();
           })
           .then(function (j) {
-            if (!j || !j.ok) {
-              throw new Error((j && j.error) || 'Request failed');
-            }
+            if (!j || !j.ok) throw new Error((j && j.error) || 'Request failed');
             return j.data;
           });
       }
@@ -2183,6 +2237,13 @@ function periodLabel(monthNo, year) {
 
       /* ───────── offline queue ───────── */
 
+      var QERR = 'exp_queue_err_v1';
+      var flushing = false;
+
+      function forget(k) {
+        try { localStorage.removeItem(k); } catch (e) {}
+      }
+
       function getQueue() {
         try { return JSON.parse(store(QKEY) || '[]'); } catch (e) { return []; }
       }
@@ -2192,31 +2253,97 @@ function periodLabel(monthNo, year) {
         renderQueuePill();
       }
 
+      function errText(err) {
+        return String((err && err.message) || err || 'Unknown error');
+      }
+
+      // "Try again later" problems: no signal, server unreachable, or the
+      // hosted page is not connected yet. Anything else means the sheet
+      // answered and refused, and that reason is worth showing.
+      function isTemporaryError(err) {
+        var m = errText(err);
+        return navigator.onLine === false ||
+          /failed to fetch|networkerror|network request|load failed|not-configured|^HTTP \d/i.test(m);
+      }
+
+      // Retrying a wrong passcode on a timer would trip the server's lockout.
+      function isPasscodeError(msg) {
+        return /passcode/i.test(msg || '');
+      }
+
       function renderQueuePill() {
-        var n = getQueue().length;
         var p = $('queuePill');
-        p.className = 'queue' + (n ? ' on' : '');
-        if (n) {
-          p.textContent = n + ' entr' + (n === 1 ? 'y' : 'ies') +
-            ' waiting to sync. They will go in automatically.';
-        }
+        if (!p) return;
+
+        var n = getQueue().length;
+        p.className = 'queue' + (n ? ' on' : '') + (flushing ? ' busy' : '');
+        if (!n) return;
+
+        var what = n + ' entr' + (n === 1 ? 'y' : 'ies');
+        $('queueText').textContent = flushing
+          ? 'Syncing ' + what + '…'
+          : what + ' waiting to sync. They will go in automatically.';
+
+        var why = store(QERR);
+        $('queueWhy').hidden = !why || flushing;
+        $('queueWhy').textContent = why ? 'Last try didn’t go through: ' + why : '';
+        $('queueRetry').disabled = flushing;
       }
 
       function flushQueue() {
-        var q = getQueue();
+        if (flushing) return Promise.resolve();
 
-        if (!q.length) {
+        // Older queued items might not carry an ID; give them one so each
+        // can be removed on its own once it lands.
+        var pending = getQueue().map(function (q) {
+          if (!q.clientId) q.clientId = uid();
+          return q;
+        });
+
+        if (!pending.length) {
+          forget(QERR);
           renderQueuePill();
           return Promise.resolve();
         }
 
-        return api('addExpense', q[0])
-          .then(function (res) {
-            setQueue(getQueue().slice(1));
-            applySummary(res.summary);
-            return flushQueue();
-          })
-          .catch(function () { renderQueuePill(); });
+        store(QKEY, JSON.stringify(pending));
+        flushing = true;
+        renderQueuePill();
+
+        var sent = 0;
+        var lastError = '';
+
+        function send(i) {
+          if (i >= pending.length) return Promise.resolve();
+          var item = pending[i];
+
+          return api('addExpense', item)
+            .then(function (res) {
+              sent++;
+              setQueue(getQueue().filter(function (q) { return q.clientId !== item.clientId; }));
+              if (res && res.accounts) S.accounts = res.accounts;
+              if (res && res.summary) applySummary(res.summary);
+              return send(i + 1);
+            })
+            .catch(function (err) {
+              // No signal: stop here, everything stays queued for later.
+              if (isTemporaryError(err)) return;
+              lastError = errText(err);
+              if (isPasscodeError(lastError)) return;
+              // The sheet refused this one. Keep it and try the rest.
+              return send(i + 1);
+            });
+        }
+
+        return send(0).then(function () {
+          flushing = false;
+          if (lastError) store(QERR, lastError);
+          else forget(QERR);
+          renderQueuePill();
+          if (sent) {
+            snack(sent + ' saved entr' + (sent === 1 ? 'y' : 'ies') + ' synced to the sheet');
+          }
+        });
       }
 
       /* ───────── theming ───────── */
@@ -3185,16 +3312,12 @@ function periodLabel(monthNo, year) {
             }, 850);
           })
           .catch(function (err) {
-            console.error('XPENSE addExpense failed:', err);
-
+            if (!isTemporaryError(err)) store(QERR, errText(err));
             setQueue(getQueue().concat([payload]));
             resetForm();
-
-            snack(
-              'Could not sync: ' +
-              String(err && err.message ? err.message : err),
-              'err'
-            );
+            snack(isTemporaryError(err)
+              ? 'No connection. Saved on this phone and will sync later.'
+              : 'The sheet didn’t take it. Saved on this phone and will retry.', 'warn');
           });
       }
 
@@ -3363,6 +3486,15 @@ function periodLabel(monthNo, year) {
         });
 
         window.addEventListener('online', flushQueue);
+        document.addEventListener('visibilitychange', function () {
+          if (document.visibilityState === 'visible') flushQueue();
+        });
+        setInterval(function () {
+          if (!getQueue().length || navigator.onLine === false) return;
+          if (isPasscodeError(store(QERR))) return;
+          flushQueue();
+        }, 30000);
+        if ($('queueRetry')) $('queueRetry').onclick = function () { flushQueue(); };
         renderQueuePill();
 
         api('getBootstrap')
