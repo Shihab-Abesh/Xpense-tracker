@@ -2008,48 +2008,53 @@
         var c = cfg();
         if (!c.url) return Promise.reject(new Error('not-configured'));
 
-        // Match what the plain Apps Script call would have received.
+        // Hosted GitHub Pages route: use GET for every action.
+        // The Apps Script doGet() endpoint already supports all actions,
+        // and this avoids cross-origin POST/preflight issues.
         var payload = arg;
-        if (fn === 'deleteEntry') payload = { id: arg };
-        if (fn === 'getMonthlyHistory') payload = { limit: arg };
 
-        var readOnly = fn === 'getBootstrap' || fn === 'getSummary' ||
-          fn === 'getMonthDetail' || fn === 'getMonthlyHistory';
+        if (fn === 'deleteEntry') {
+          payload = { id: arg };
+        }
 
-        if (readOnly) {
-          var qs = new URLSearchParams({
-            action: fn,
-            token: c.pin,
-            payload: JSON.stringify(payload || {})
-          });
+        if (fn === 'deleteIncome') {
+          payload = { id: arg };
+        }
 
-          return fetch(c.url + (c.url.indexOf('?') > -1 ? '&' : '?') + qs.toString(), {
+        if (fn === 'deleteTransfer') {
+          payload = { id: arg };
+        }
+
+        if (fn === 'deleteHeldMoney') {
+          payload = { id: arg };
+        }
+
+        if (fn === 'getMonthlyHistory') {
+          payload = { limit: arg };
+        }
+
+        var qs = new URLSearchParams({
+          action: fn,
+          token: c.pin,
+          payload: JSON.stringify(payload || {})
+        });
+
+        return fetch(
+          c.url + (c.url.indexOf('?') > -1 ? '&' : '?') + qs.toString(),
+          {
             method: 'GET',
             cache: 'no-store',
             redirect: 'follow'
-          })
-            .then(function (r) {
-              if (!r.ok) throw new Error('HTTP ' + r.status);
-              return r.json();
-            })
-            .then(function (j) {
-              if (!j || !j.ok) throw new Error((j && j.error) || 'Request failed');
-              return j.data;
-            });
-        }
-
-        return fetch(c.url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          redirect: 'follow',
-          body: JSON.stringify({ action: fn, token: c.pin, payload: payload || {} })
-        })
+          }
+        )
           .then(function (r) {
             if (!r.ok) throw new Error('HTTP ' + r.status);
             return r.json();
           })
           .then(function (j) {
-            if (!j || !j.ok) throw new Error((j && j.error) || 'Request failed');
+            if (!j || !j.ok) {
+              throw new Error((j && j.error) || 'Request failed');
+            }
             return j.data;
           });
       }
@@ -3179,10 +3184,17 @@ function periodLabel(monthNo, year) {
               flushQueue();
             }, 850);
           })
-          .catch(function () {
+          .catch(function (err) {
+            console.error('XPENSE addExpense failed:', err);
+
             setQueue(getQueue().concat([payload]));
             resetForm();
-            snack('No connection. Saved on this phone and will sync later.', 'warn');
+
+            snack(
+              'Could not sync: ' +
+              String(err && err.message ? err.message : err),
+              'err'
+            );
           });
       }
 
